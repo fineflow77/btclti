@@ -46,8 +46,6 @@ const App: React.FC = () => {
                       chartData={powerLawData}
                       currentPrice={currentPrice?.prices.usd}
                       height={500}
-                      showPositionInfo={true}
-                      isZoomed={false}
                     />
                   )
                 }

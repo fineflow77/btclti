@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Wallet, Info, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
 import { useBitcoinData } from '../hooks/useBitcoinData';
-import PowerLawChart from '../components/charts/PowerLawChartWrapper'; // Corrected import to PowerLawChartWrapper
+import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
 import { formatCurrency } from '../utils/formatters';
-import { calculatePowerLawPosition, getPowerLawPositionLabel, getPowerLawPositionColor, calculateRSquared, formatPercentage } from '../utils/models';
+import { calculatePowerLawPosition, getPowerLawPositionLabel, getPowerLawPositionColor } from '../utils/models';
+import { calculateRSquared, formatPercentage } from '../utils/mathUtils';
 import DataContainer from '../components/ui/DataContainer';
 import { getDaysSinceGenesis } from '../utils/dateUtils';
 import { ChartLineUp, Wallet as PhosphorWallet } from 'phosphor-react';
 
-const typography = {
+const typography: Record<string, string> = {
   h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
   h3: 'text-lg sm:text-xl font-medium',
   subtitle: 'text-base sm:text-lg font-medium',
@@ -17,7 +18,7 @@ const typography = {
   small: 'text-xs sm:text-sm font-normal',
 };
 
-const colors = {
+const colors: Record<string, string> = {
   primary: 'bg-green-500 hover:bg-green-600 text-white',
   secondary: 'bg-blue-500 hover:bg-blue-600 text-white',
   accent: 'bg-amber-500 hover:bg-amber-600 text-white',
@@ -35,25 +36,22 @@ const colors = {
 };
 
 const Home: React.FC = () => {
-  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices, rSquared: dataRSquared, networkData } = useBitcoinData();
-  const [rSquared, setRSquared] = useState(0.9703);
-  const [isIntroVisible, setIsIntroVisible] = useState(false);
+  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData();
+  const [rSquared, setRSquared] = useState<number>(0.9703);
 
   useEffect(() => {
-    if (dataRSquared !== null) {
-      setRSquared(dataRSquared);
-    } else if (weeklyPrices && weeklyPrices.length > 0) {
+    if (weeklyPrices && weeklyPrices.length > 0) {
       const calculatedRSquared = calculateRSquared(weeklyPrices.map(item => [new Date(item.date).getTime(), item.price]));
       if (calculatedRSquared !== null) setRSquared(calculatedRSquared);
     }
-  }, [weeklyPrices, dataRSquared]);
+  }, [weeklyPrices]);
 
   const powerLawPosition = useMemo(() => {
     if (!currentPrice || !powerLawData || powerLawData.length === 0) return null;
     const latestNonFutureData = [...powerLawData]
       .filter(item => !item.isFuture && item.price !== null)
       .sort((a, b) => b.date - a.date)[0];
-    if (!latestNonFutureData) return null;
+    if (!latestNonFutureData || !currentPrice.prices.usd) return null;
 
     return calculatePowerLawPosition(
       currentPrice.prices.usd,
@@ -65,7 +63,7 @@ const Home: React.FC = () => {
   const priceChangePercentage = useMemo(() => {
     if (!currentPrice || !dailyPrices || dailyPrices.length < 2) return null;
     const sortedPrices = [...dailyPrices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    if (sortedPrices.length < 2) return null;
+    if (sortedPrices.length < 2 || !currentPrice.prices.usd) return null;
     const latestPrice = currentPrice.prices.usd;
     const yesterdayPrice = sortedPrices[1].price;
     return ((latestPrice - yesterdayPrice) / yesterdayPrice) * 100;
@@ -87,9 +85,7 @@ const Home: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0 bg-transparent text-gray-100 space-y-6">
-        {/* イントロモーダル (省略) */}
-
-        {/* シミュレーターへの導線 (変更なし) */}
+        {/* シミュレーターへの導線 */}
         <div className="text-center mt-10">
           <p className="text-lg text-gray-300 mb-6">長期ビットコイン投資による資産形成を考える</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -128,7 +124,7 @@ const Home: React.FC = () => {
           <h2 className={`${typography.subtitle} text-amber-400`}>ビットコイン価格トラッカー</h2>
         </div>
 
-        {/* 最終更新 & 為替レート (左右に配置) */}
+        {/* 最終更新 & 為替レート */}
         <div className="flex justify-between items-center mb-4">
           <div className="text-xs text-gray-400">
             為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
@@ -140,9 +136,7 @@ const Home: React.FC = () => {
               </span>
             )}
           </div>
-
         </div>
-
 
         {/* 価格カード3枚 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -158,7 +152,7 @@ const Home: React.FC = () => {
               loadingMessage="価格データ取得中..."
               noDataMessage="価格データが利用できません"
             >
-              {currentPrice ? (
+              {currentPrice && currentPrice.prices.usd ? (
                 <div className="space-y-2">
                   <div className="text-2xl font-bold text-amber-400">
                     {formatCurrency(currentPrice.prices.jpy, 'JPY')}
@@ -234,7 +228,7 @@ const Home: React.FC = () => {
 
         <div className="py-6"></div> {/* スペーサー */}
 
-        {/* チャート部分 (変更なし) */}
+        {/* チャート部分 */}
         <div className="mb-8 mt-2">
           <h2 className="text-center text-lg font-medium text-amber-400 mb-4">ビットコイン長期価格予測（パワーローモデル）</h2>
           <div className={`rounded-xl ${colors.cardBorder} overflow-hidden`}>
@@ -244,24 +238,17 @@ const Home: React.FC = () => {
               loadingMessage="チャートデータ取得中..."
               noDataMessage="チャートデータが利用できません"
             >
-              {error && (
-                <div className="text-red-400 text-center p-4 bg-red-900 bg-opacity-20 rounded-lg border border-red-700">
-                  データ取得エラー: {error.message}. 再試行してください。
-                </div>
-              )}
               {powerLawData && powerLawData.length > 0 ? (
-                <PowerLawChart
+                <PowerLawChartWrapper
                   rSquared={rSquared}
                   chartData={powerLawData}
                   exchangeRate={exchangeRate}
-                  currentPrice={currentPrice?.prices.usd}
+                  currentPrice={currentPrice?.prices.usd ?? 0}
                   height={800}
-                  isZoomed={false}
+
                   powerLawPosition={powerLawPosition}
                 />
-              ) : (
-                <div className="p-12 text-center text-gray-400">チャートデータがありません</div>
-              )}
+              ) : null}
             </DataContainer>
           </div>
         </div>

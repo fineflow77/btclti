@@ -1,58 +1,58 @@
-import { getDaysSinceGenesis } from './dateUtils';
+// src/utils/models.ts
 import { PriceModel } from './constants';
+import { log10, fromLog10 } from './mathUtils'; // formatPercentageは使用しないので削除
 
-export const log10 = (value) => Math.log10(Math.max(0.0000001, value));
-export const fromLog10 = (logValue) => Math.pow(10, logValue);
-
-export const btcPriceMedian = (days: number, model: PriceModel = PriceModel.STANDARD): number => {
-    const medianModelLog = -17.01593313 + 5.84509376 * Math.log10(days);
-    return Math.pow(10, medianModelLog);
+/**
+ * ビットコインの中央価格（USD）を計算
+ * @param days - ジェネシスブロックからの日数
+ * @param model - 価格モデル（デフォルト: STANDARD）
+ * @returns 中央価格（USD）
+ */
+export const btcPriceMedian = (days: number, _model: PriceModel = PriceModel.STANDARD): number => {
+    const medianModelLog = -17.01593313 + 5.84509376 * log10(days);
+    return fromLog10(medianModelLog);
 };
 
+/**
+ * ビットコインの下限価格（USD）を計算
+ * @param days - ジェネシスブロックからの日数
+ * @returns 下限価格（USD）
+ */
 export const btcPriceSupport = (days: number): number => {
-    const supportModelLog = -17.668 + 5.926 * Math.log10(days);
-    return Math.pow(10, supportModelLog);
+    const supportModelLog = -17.668 + 5.926 * log10(days);
+    return fromLog10(supportModelLog);
 };
 
-export const calculateRSquared = (data) => {
-    if (!data || data.length === 0) return null;
-
-    let sumX = 0;
-    let sumY = 0;
-    let sumXY = 0;
-    let sumX2 = 0;
-    let sumY2 = 0;
-    const n = data.length;
-
-    for (let i = 0; i < n; i++) {
-        const [timestamp, price] = data[i];
-        const days = getDaysSinceGenesis(new Date(timestamp));
-        const x = Math.log10(Math.max(1, days));
-        const y = Math.log10(Math.max(0.0000001, price));
-
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumX2 += x * x;
-        sumY2 += y * y;
-    }
-
-    const numerator = n * sumXY - sumX * sumY;
-    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-    return denominator === 0 ? 0 : Math.pow(numerator / denominator, 2);
-};
-
-export const calculatePowerLawPosition = (price, medianPrice, supportPrice) => {
-    if (!price || !medianPrice) return null;
+/**
+ * パワーロー内での相対位置を計算
+ * @param price - 現在価格（USD）
+ * @param medianPrice - 中央価格（USD）
+ * @param supportPrice - 下限価格（USD）
+ * @returns 相対位置（パーセント）、計算不可の場合はnull
+ */
+export const calculatePowerLawPosition = (price: number, medianPrice: number, supportPrice: number): number | null => {
+    if (!price || !medianPrice || !supportPrice) return null;
     return ((price - medianPrice) / medianPrice) * 100;
 };
 
-export const calculateSupportDeviation = (price, supportPrice) => {
+/**
+ * 下限価格からの乖離率を計算
+ * @param price - 現在価格（USD）
+ * @param supportPrice - 下限価格（USD）
+ * @returns 乖離率（パーセント）、計算不可の場合はnull
+ */
+export const calculateSupportDeviation = (price: number, supportPrice: number): number | null => {
     if (!price || !supportPrice) return null;
     return ((price - supportPrice) / supportPrice) * 100;
 };
 
-export const getPowerLawPositionLabel = (position, supportDeviation = null) => {
+/**
+ * パワーロー位置に基づくラベルを返す
+ * @param position - 相対位置（パーセント）
+ * @param supportDeviation - 下限からの乖離率（オプション）
+ * @returns 位置の説明
+ */
+export const getPowerLawPositionLabel = (position: number | null, supportDeviation: number | null = null): string => {
     if (position === null || position === undefined) return '計算不可';
 
     let baseLabel = '';
@@ -70,21 +70,22 @@ export const getPowerLawPositionLabel = (position, supportDeviation = null) => {
     return baseLabel;
 };
 
-export const getPowerLawPositionColor = (position, supportDeviation = null) => {
+/**
+ * パワーロー位置に基づく色を返す
+ * @param position - 相対位置（パーセント）
+ * @param supportDeviation - 下限からの乖離率（オプション）
+ * @returns 色（HEX）
+ */
+export const getPowerLawPositionColor = (position: number | null, supportDeviation: number | null = null): string => {
     if (position === null || position === undefined) return '#888888';
+    if (supportDeviation !== null && supportDeviation < 10) return '#D81B60';
 
-    if (supportDeviation !== null && supportDeviation < 10) return '#D81B60'; // 濃いピンクで警告
-
-    if (position < -50) return '#1565C0'; // 濃い青: 買い増しチャンス
-    if (position < -30) return '#2196F3'; // 青: 割安
-    if (position < -10) return '#4CAF50'; // 緑: やや割安
-    if (position <= 10) return '#8BC34A'; // 黄緑: 適正範囲
-    if (position <= 30) return '#FF9800'; // オレンジ: 上昇（注意）
-    if (position <= 70) return '#F44336'; // 赤: 高値警戒
-    return '#B71C1C'; // 濃い赤: ピーク警戒（売却検討）
+    if (position < -50) return '#1565C0';
+    if (position < -30) return '#2196F3';
+    if (position < -10) return '#4CAF50';
+    if (position <= 10) return '#8BC34A';
+    if (position <= 30) return '#FF9800';
+    if (position <= 70) return '#F44336';
+    return '#B71C1C';
 };
 
-export const formatPercentage = (value, decimals = 1) => {
-    if (value === null || isNaN(value)) return '-';
-    return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
-};

@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PriceModel } from '../utils/constants';
-import { calculateRSquared } from '../utils/models';
+import { calculateRSquared } from '../utils/mathUtils';
 
 const getDaysSinceGenesis = (date: Date): number => {
     const genesisDate = new Date('2009-01-03');
     return Math.floor((date.getTime() - genesisDate.getTime()) / (1000 * 60 * 60 * 24));
 };
 
-const btcPriceMedian = (days: number, model: PriceModel = PriceModel.STANDARD): number => {
+const btcPriceMedian = (days: number): number => {
     const medianModelLog = -17.01593313 + 5.84509376 * Math.log10(days);
     return Math.pow(10, medianModelLog);
 };
@@ -17,10 +16,9 @@ const btcPriceSupport = (days: number): number => {
     return Math.pow(10, supportModelLog);
 };
 
-// 型定義を src/types/index.ts に合わせる
 interface PriceResponse {
-    prices: { usd: number; jpy: number; };
-    timestamp: string; // src/types/index.ts に合わせるため string に
+    prices: { usd: number; jpy: number };
+    timestamp: string;
     source?: string;
 }
 
@@ -30,11 +28,25 @@ interface BitcoinData {
     currentPrice: PriceResponse | null;
     dailyPrices: Array<{ date: string; price: number }>;
     weeklyPrices: Array<{ date: string; price: number }>;
-    powerLawData: Array<{ date: number; price: number | null; medianModel: number; supportModel: number; isFuture: boolean; daysSinceGenesis: number }>;
-    dailyPowerLawData: Array<{ date: number; price: number | null; medianModel: number; supportModel: number; isFuture: boolean; daysSinceGenesis: number }>;
+    powerLawData: Array<{
+        date: number;
+        price: number | null;
+        medianModel: number;
+        supportModel: number;
+        isFuture: boolean;
+        daysSinceGenesis: number;
+    }>;
+    dailyPowerLawData: Array<{
+        date: number;
+        price: number | null;
+        medianModel: number;
+        supportModel: number;
+        isFuture: boolean;
+        daysSinceGenesis: number;
+    }>;
     exchangeRate: number;
     rSquared: number | null;
-    dataSources: { currentPrice?: string; dailyPrices?: string; weeklyPrices?: string; };
+    dataSources: { currentPrice?: string; dailyPrices?: string; weeklyPrices?: string };
 }
 
 const fetchBinanceCurrentPrice = async (): Promise<PriceResponse> => {
@@ -157,8 +169,22 @@ const generatePowerLawChartData = (
     const displayStartTimestamp = new Date('2009-07-18').getTime();
     const endTimestamp = new Date('2040-12-31').getTime();
 
-    const powerLawData: Array<{ date: number; price: number | null; medianModel: number; supportModel: number; isFuture: boolean; daysSinceGenesis: number }> = [];
-    const dailyPowerLawData: Array<{ date: number; price: number | null; medianModel: number; supportModel: number; isFuture: boolean; daysSinceGenesis: number }> = [];
+    const powerLawData: Array<{
+        date: number;
+        price: number | null;
+        medianModel: number;
+        supportModel: number;
+        isFuture: boolean;
+        daysSinceGenesis: number;
+    }> = [];
+    const dailyPowerLawData: Array<{
+        date: number;
+        price: number | null;
+        medianModel: number;
+        supportModel: number;
+        isFuture: boolean;
+        daysSinceGenesis: number;
+    }> = [];
 
     weeklyData.forEach(item => {
         const date = new Date(item.date);
@@ -193,33 +219,69 @@ const generatePowerLawChartData = (
     });
 
     const weeklyDailyData = convertDailyToWeekly(dailyData);
-    weeklyDailyData.forEach(item => {
+    weeklyDailyData.forEach((item: { date: string; price: number }) => {
         const date = new Date(item.date);
         const timestamp = date.getTime();
         if (timestamp >= graphStartTimestamp) {
             const days = getDaysSinceGenesis(date);
             const existingIndex = powerLawData.findIndex(d => d.date === timestamp);
             if (existingIndex !== -1) powerLawData[existingIndex].price = item.price;
-            else powerLawData.push({ date: timestamp, price: item.price, medianModel: btcPriceMedian(days), supportModel: btcPriceSupport(days), isFuture: date > now, daysSinceGenesis: days });
+            else
+                powerLawData.push({
+                    date: timestamp,
+                    price: item.price,
+                    medianModel: btcPriceMedian(days),
+                    supportModel: btcPriceSupport(days),
+                    isFuture: date > now,
+                    daysSinceGenesis: days,
+                });
         }
     });
 
     if (currentPrice) {
         const days = getDaysSinceGenesis(now);
-        powerLawData.push({ date: nowTimestamp, price: currentPrice.prices.usd, medianModel: btcPriceMedian(days), supportModel: btcPriceSupport(days), isFuture: false, daysSinceGenesis: days });
-        dailyPowerLawData.push({ date: nowTimestamp, price: currentPrice.prices.usd, medianModel: btcPriceMedian(days), supportModel: btcPriceSupport(days), isFuture: false, daysSinceGenesis: days });
+        powerLawData.push({
+            date: nowTimestamp,
+            price: currentPrice.prices.usd,
+            medianModel: btcPriceMedian(days),
+            supportModel: btcPriceSupport(days),
+            isFuture: false,
+            daysSinceGenesis: days,
+        });
+        dailyPowerLawData.push({
+            date: nowTimestamp,
+            price: currentPrice.prices.usd,
+            medianModel: btcPriceMedian(days),
+            supportModel: btcPriceSupport(days),
+            isFuture: false,
+            daysSinceGenesis: days,
+        });
     }
 
     let lastWeekDate = Math.max(...powerLawData.map(d => d.date));
     for (let timestamp = lastWeekDate + weekMs; timestamp <= endTimestamp; timestamp += weekMs) {
         const days = getDaysSinceGenesis(new Date(timestamp));
-        powerLawData.push({ date: timestamp, price: null, medianModel: btcPriceMedian(days), supportModel: btcPriceSupport(days), isFuture: true, daysSinceGenesis: days });
+        powerLawData.push({
+            date: timestamp,
+            price: null,
+            medianModel: btcPriceMedian(days),
+            supportModel: btcPriceSupport(days),
+            isFuture: true,
+            daysSinceGenesis: days,
+        });
     }
 
     let lastDailyDate = Math.max(...dailyPowerLawData.map(d => d.date));
     for (let timestamp = lastDailyDate + dayMs; timestamp <= endTimestamp; timestamp += dayMs) {
         const days = getDaysSinceGenesis(new Date(timestamp));
-        dailyPowerLawData.push({ date: timestamp, price: null, medianModel: btcPriceMedian(days), supportModel: btcPriceSupport(days), isFuture: true, daysSinceGenesis: days });
+        dailyPowerLawData.push({
+            date: timestamp,
+            price: null,
+            medianModel: btcPriceMedian(days),
+            supportModel: btcPriceSupport(days),
+            isFuture: true,
+            daysSinceGenesis: days,
+        });
     }
 
     powerLawData.sort((a, b) => a.date - b.date);
@@ -227,7 +289,7 @@ const generatePowerLawChartData = (
 
     const rSquaredInput = powerLawData
         .filter(d => !d.isFuture && d.price !== null)
-        .map(d => [d.date, d.price]);
+        .map(d => [d.date, d.price] as [number, number]);
     const rSquared = calculateRSquared(rSquaredInput);
 
     const filteredPowerLawData = powerLawData.filter(d => d.date >= displayStartTimestamp);
@@ -261,18 +323,12 @@ export const useBitcoinData = (): BitcoinData => {
 
             try {
                 console.log('Binanceデータ取得開始');
-                [currentPriceData, dailyPricesData] = await Promise.all([
-                    fetchBinanceCurrentPrice(),
-                    fetchBinanceDailyPrices(),
-                ]);
+                [currentPriceData, dailyPricesData] = await Promise.all([fetchBinanceCurrentPrice(), fetchBinanceDailyPrices()]);
                 console.log('Binance成功:', currentPriceData);
             } catch (binanceError) {
                 console.warn('Binance失敗、CoinGeckoにフォールバック:', binanceError);
                 console.log('CoinGeckoデータ取得開始');
-                [currentPriceData, dailyPricesData] = await Promise.all([
-                    fetchCoinGeckoCurrentPrice(),
-                    fetchCoinGeckoDailyPrices(),
-                ]);
+                [currentPriceData, dailyPricesData] = await Promise.all([fetchCoinGeckoCurrentPrice(), fetchCoinGeckoDailyPrices()]);
                 console.log('CoinGecko成功:', currentPriceData);
             }
 

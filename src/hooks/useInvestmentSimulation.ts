@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { getDaysSinceGenesis } from '../utils/dateUtils'; // calculateDays を getDaysSinceGenesis に仮定
+import { getDaysSinceGenesis } from '../utils/dateUtils';
 import { btcPriceMedian } from '../utils/models';
-import { DEFAULTS, CURRENT_YEAR, TRANSITION_START_YEAR, TARGET_YEAR, PriceModel } from '../utils/constants';
+import { CURRENT_YEAR, TRANSITION_START_YEAR, TARGET_YEAR, PriceModel } from '../utils/constants';
 
 export interface SimulationInputs {
     initialInvestmentType: 'btc' | 'jpy';
@@ -38,7 +38,6 @@ export const useInvestmentSimulation = () => {
     const [results, setResults] = useState<InvestmentSimulationResult[]>([]);
     const [errors, setErrors] = useState<SimulationErrors>({});
 
-    // 入力値検証関数
     const validateInputs = (inputs: SimulationInputs): boolean => {
         const newErrors: SimulationErrors = {};
 
@@ -78,7 +77,6 @@ export const useInvestmentSimulation = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // シミュレーション実行関数
     const simulate = (inputs: SimulationInputs): void => {
         if (!validateInputs(inputs)) return;
 
@@ -90,14 +88,13 @@ export const useInvestmentSimulation = () => {
             const yearsNum = parseInt(inputs.years);
             const startYear = CURRENT_YEAR;
             const endYear = Math.max(TARGET_YEAR, startYear + yearsNum);
-            let basePriceUSD: number | null = null;
-            let baseDays: number | null = null;
+            let basePriceUSD = 0; // nullを防ぐ
+            let baseDays = 0; // nullを防ぐ
             let btcHeld = inputs.initialInvestmentType === 'jpy' ? 0 : parseFloat(inputs.initialBtcHolding) || 0;
             let initialInvestmentValue = inputs.initialInvestmentType === 'jpy' ? parseFloat(inputs.initialInvestment) || 0 : 0;
 
-            // 初年度のBTC価格を計算
-            const initialDays = getDaysSinceGenesis(new Date(startYear, 0, 1)); // 1月1日基準
-            const initialBtcPriceUSD = btcPriceMedian(initialDays, inputs.priceModel);
+            const initialDays = getDaysSinceGenesis(new Date(startYear, 0, 1));
+            const initialBtcPriceUSD = btcPriceMedian(initialDays, inputs.priceModel) || 0;
             const initialExchangeRate = exchangeRateNum;
             const initialBtcPriceJPY = initialBtcPriceUSD * initialExchangeRate;
 
@@ -107,39 +104,36 @@ export const useInvestmentSimulation = () => {
 
             let currentValueJPY = btcHeld * initialBtcPriceJPY;
 
-            // 各年のシミュレーション
             for (let year = startYear; year <= endYear; year++) {
                 const isInvestmentPeriod = year < startYear + yearsNum;
-                const days = getDaysSinceGenesis(new Date(year, 0, 1)); // 年初の日数
+                const days = getDaysSinceGenesis(new Date(year, 0, 1));
 
-                // BTC価格計算（パワーローモデル）
-                let btcPriceUSD = btcPriceMedian(days, inputs.priceModel);
+                let btcPriceUSD = btcPriceMedian(days, inputs.priceModel) || 0;
                 if (year >= TRANSITION_START_YEAR) {
-                    if (!basePriceUSD) {
-                        basePriceUSD = btcPriceMedian(getDaysSinceGenesis(new Date(TRANSITION_START_YEAR - 1, 0, 1)), inputs.priceModel);
+                    if (basePriceUSD === 0) {
+                        basePriceUSD = btcPriceMedian(getDaysSinceGenesis(new Date(TRANSITION_START_YEAR - 1, 0, 1)), inputs.priceModel) || 0;
                         baseDays = getDaysSinceGenesis(new Date(TRANSITION_START_YEAR - 1, 0, 1));
                     }
                     const targetScale = inputs.priceModel === PriceModel.STANDARD ? 0.41 : 0.5;
                     const decayRate = inputs.priceModel === PriceModel.STANDARD ? 0.2 : 0.25;
                     const scale = targetScale + (1.0 - targetScale) * Math.exp(-decayRate * (year - (TRANSITION_START_YEAR - 1)));
-                    btcPriceUSD = basePriceUSD * Math.pow(btcPriceMedian(days, inputs.priceModel) / btcPriceMedian(baseDays, inputs.priceModel), scale);
+                    const medianPrice = btcPriceMedian(days, inputs.priceModel) || 0;
+                    const baseMedianPrice = btcPriceMedian(baseDays, inputs.priceModel) || 1; // ゼロ除算を防ぐ
+                    btcPriceUSD = basePriceUSD * Math.pow(medianPrice / baseMedianPrice, scale);
                 }
 
-                // インフレ調整後の価格
                 const inflationAdjustedExchangeRate = exchangeRateNum * Math.pow(1 + inflationRateNum, year - startYear);
                 const btcPriceJPY = btcPriceUSD * inflationAdjustedExchangeRate;
 
-                // 年間投資額と購入BTC量
                 const annualInvestment = isInvestmentPeriod ? monthlyInvestmentNum * 12 : 0;
                 const btcPurchased = annualInvestment / btcPriceJPY;
 
-                // BTC保有量と評価額
                 btcHeld += btcPurchased;
                 currentValueJPY = btcHeld * btcPriceJPY;
 
                 simulationResults.push({
                     year,
-                    btcPrice: btcPriceJPY, // インフレ調整後の円価格
+                    btcPrice: btcPriceJPY,
                     annualInvestment,
                     btcPurchased,
                     btcHeld,
@@ -162,4 +156,3 @@ export const useInvestmentSimulation = () => {
         validateInputs,
     };
 };
-

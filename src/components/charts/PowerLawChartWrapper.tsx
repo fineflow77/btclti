@@ -1,41 +1,21 @@
+// src/components/charts/PowerLawChartWrapper.tsx
 import React from 'react';
 import PowerLawChart from './PowerLawChart';
 import LogLogPowerLawChart from './LogLogPowerLawChart';
-import { ChartDataPoint } from './PowerLawChart';
-
-interface PowerLawChartWrapperProps {
-    rSquared: number;
-    chartData: ChartDataPoint[];
-    exchangeRate: number;
-    currentPrice: number | undefined;
-    height: number;
-    powerLawPosition: number | null;
-}
+import { PowerLawChartWrapperProps } from '../../types';
 
 const PowerLawChartWrapper: React.FC<PowerLawChartWrapperProps> = (props) => {
+    const { isLogScale, height, ...restProps } = props;
+
+    // Simple wrapper that just selects between the two chart types
     return (
-        <>
-            <PowerLawChart
-                rSquared={props.rSquared}
-                chartData={props.chartData}
-                exchangeRate={props.exchangeRate}
-                currentPrice={props.currentPrice}
-                height={props.height}
-                powerLawPosition={props.powerLawPosition}
-                showRSquared={false}
-                chartTitle="Power Law Chart"
-            />
-            <LogLogPowerLawChart
-                rSquared={props.rSquared}
-                chartData={props.chartData}
-                exchangeRate={props.exchangeRate}
-                currentPrice={props.currentPrice}
-                height={400}
-                powerLawPosition={props.powerLawPosition}
-                showRSquared={true}
-                chartTitle="Log-Log Power Law Chart"
-            />
-        </>
+        <div className="w-full h-full">
+            {isLogScale ? (
+                <LogLogPowerLawChart {...restProps} height={height} />
+            ) : (
+                <PowerLawChart {...restProps} height={height} isLogScale={false} />
+            )}
+        </div>
     );
 };
 

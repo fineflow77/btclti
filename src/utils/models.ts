@@ -1,6 +1,6 @@
 // src/utils/models.ts
 import { PriceModel } from './constants';
-import { log10, fromLog10 } from './mathUtils'; // formatPercentageは使用しないので削除
+import { log10, fromLog10 } from './mathUtils';
 
 /**
  * ビットコインの中央価格（USD）を計算
@@ -8,8 +8,15 @@ import { log10, fromLog10 } from './mathUtils'; // formatPercentageは使用し�
  * @param model - 価格モデル（デフォルト: STANDARD）
  * @returns 中央価格（USD）
  */
-export const btcPriceMedian = (days: number, _model: PriceModel = PriceModel.STANDARD): number => {
-    const medianModelLog = -17.01593313 + 5.84509376 * log10(days);
+export const btcPriceMedian = (days: number, model: PriceModel = PriceModel.STANDARD): number => {
+    let medianModelLog: number;
+    if (model === PriceModel.STANDARD) {
+        // 標準モデル（2050年に約1000万USD）
+        medianModelLog = -17.01593313 + 5.84509376 * log10(days);
+    } else {
+        // 保守的モデル（2050年に約400万USD）
+        medianModelLog = -17.5 + 5.7 * log10(days);
+    }
     return fromLog10(medianModelLog);
 };
 
@@ -25,14 +32,20 @@ export const btcPriceSupport = (days: number): number => {
 
 /**
  * パワーロー内での相対位置を計算
+ * 現在価格が中央価格と下限価格の範囲内でどの位置にあるかを計算する。
+ * 範囲は下限価格を0%、中央価格を50%、上限価格（中央価格の2倍）を100%として正規化。
  * @param price - 現在価格（USD）
  * @param medianPrice - 中央価格（USD）
  * @param supportPrice - 下限価格（USD）
  * @returns 相対位置（パーセント）、計算不可の場合はnull
  */
 export const calculatePowerLawPosition = (price: number, medianPrice: number, supportPrice: number): number | null => {
-    if (!price || !medianPrice || !supportPrice) return null;
-    return ((price - medianPrice) / medianPrice) * 100;
+    if (!price || !medianPrice || !supportPrice || medianPrice <= supportPrice) return null;
+
+    const upperPrice = medianPrice * 2; // 上限価格を中央価格の2倍と仮定
+    const range = upperPrice - supportPrice; // 価格範囲
+    const normalizedPosition = ((price - supportPrice) / range) * 100; // 0%（下限）から100%（上限）へ正規化
+    return Math.min(Math.max(normalizedPosition, 0), 100); // 0～100%にクランプ
 };
 
 /**
@@ -56,13 +69,11 @@ export const getPowerLawPositionLabel = (position: number | null, supportDeviati
     if (position === null || position === undefined) return '計算不可';
 
     let baseLabel = '';
-    if (position < -50) baseLabel = '買い増しチャンス';
-    else if (position < -30) baseLabel = '割安';
-    else if (position < -10) baseLabel = 'やや割安';
-    else if (position <= 10) baseLabel = '適正範囲';
-    else if (position <= 30) baseLabel = '上昇（注意）';
-    else if (position <= 70) baseLabel = '高値警戒';
-    else baseLabel = 'ピーク警戒（売却検討）';
+    if (position < 20) baseLabel = '非常に割安';
+    else if (position < 40) baseLabel = '割安';
+    else if (position < 60) baseLabel = '適正範囲';
+    else if (position < 80) baseLabel = '割高';
+    else baseLabel = '非常に割高';
 
     if (supportDeviation !== null && supportDeviation < 10) {
         return `${baseLabel} - 下限に接近`;
@@ -80,12 +91,9 @@ export const getPowerLawPositionColor = (position: number | null, supportDeviati
     if (position === null || position === undefined) return '#888888';
     if (supportDeviation !== null && supportDeviation < 10) return '#D81B60';
 
-    if (position < -50) return '#1565C0';
-    if (position < -30) return '#2196F3';
-    if (position < -10) return '#4CAF50';
-    if (position <= 10) return '#8BC34A';
-    if (position <= 30) return '#FF9800';
-    if (position <= 70) return '#F44336';
-    return '#B71C1C';
+    if (position < 20) return '#1565C0';
+    if (position < 40) return '#2196F3';
+    if (position < 60) return '#8BC34A';
+    if (position < 80) return '#FF9800';
+    return '#F44336';
 };
-

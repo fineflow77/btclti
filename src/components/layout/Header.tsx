@@ -1,6 +1,8 @@
+// src/components/layout/Header.tsx
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Info } from 'lucide-react'; // Wallet アイコンは不要なので削除
+import { Menu, X, Info, Wallet, BarChart2, Newspaper, ChevronDown, ChevronRight } from 'lucide-react';
+import { ChartLineUp } from 'phosphor-react';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const colors = {
@@ -10,72 +12,163 @@ const colors = {
     muted: 'text-gray-400',
   },
   infoLink: 'text-gray-300 hover:text-white',
-  border: 'border-[#2c333e]',
-  focus: 'focus:outline-none focus:ring-1 focus:ring-gray-500',
+  border: 'border-[#2c333e]/50',
+  focus: 'focus:outline-none focus:ring-2 focus:ring-[#3B82F6]',
+  accent: 'text-[#3B82F6]',
+  accentBg: 'bg-[#3B82F6] hover:bg-[#2b6cb0]',
 };
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  children?: NavItem[];
+}
 
 const Header: React.FC = () => {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const location = useLocation();
 
   useEffect(() => {
     if (isMobileMenuOpen) setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+
+  const navItems: NavItem[] = [
+    {
+      to: '#',
+      label: '学ぶ',
+      icon: <Info className="h-4 w-4 mr-2" />,
+      children: [
+        { to: '/bitcoin-basics', label: 'ビットコイン投資の基礎', icon: <Info className="h-4 w-4 mr-2" /> },
+        { to: '/power-law-explanation', label: 'パワーロー解説', icon: <Info className="h-4 w-4 mr-2" /> },
+        { to: '/analysis-news', label: 'ニュース', icon: <Newspaper className="h-4 w-4 mr-2" /> },
+      ],
+    },
+    {
+      to: '#',
+      label: 'シミュレーター',
+      icon: <BarChart2 className="h-4 w-4 mr-2" />,
+      children: [
+        { to: '/simulators/investment', label: '積み立てシミュレーター', icon: <ChartLineUp className="h-4 w-4 mr-2" /> },
+        { to: '/simulators/withdrawal', label: '取り崩しシミュレーター', icon: <Wallet className="h-4 w-4 mr-2" /> },
+      ],
+    },
+  ];
 
   return (
-    <header className="bg-[#1a202c] shadow-md sticky top-0 z-50 border-b border-[#2c333e]">
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+    <header className="bg-[#1a202c]/80 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-[#2c333e]/50">
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        {/* ロゴ */}
         <NavLink
           to="/"
-          className="flex items-center hover:opacity-90 transition-opacity"
-          aria-label="ビットコイン長期投資ナビ - ホームページへ"
+          className="flex items-center hover:opacity-90 transition-opacity duration-300"
+          aria-label="ビットコイン長期投資研究所 - ホームページへ"
         >
-          <div className="text-xl font-bold">
-            <span className="bg-gradient-to-r from-[#4795EA] to-[#42D392] bg-clip-text text-transparent">
-              ビットコイン長期投資ナビ
+          <div className="text-2xl font-bold">
+            <span className="bg-gradient-to-r from-[#3B82F6] via-[#F59E0B] to-[#D4AF37] bg-clip-text text-transparent">
+              ビットコイン長期投資研究所
             </span>
           </div>
         </NavLink>
 
+        {/* ナビゲーション */}
         {isMobile ? (
           <div className="relative">
             <button
               onClick={toggleMobileMenu}
-              className="text-white p-2 rounded-md transition-colors focus:outline-none focus:ring-1 focus:ring-gray-500"
-              aria-label={isMobileMenuOpen ? "メニューを閉じる" : "メニューを開く"}
+              className={`text-white p-2 rounded-full transition-all duration-300 ${colors.focus} hover:bg-gray-700/50`}
+              aria-label={isMobileMenuOpen ? 'メニューを閉じる' : 'メニューを開く'}
               aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
 
             {isMobileMenuOpen && (
-              <nav className="absolute right-0 mt-2 bg-[#1a202c] rounded-md shadow-md w-64 z-50 overflow-hidden border border-[#2c333e] animate-fadeIn">
-                <NavLink
-                  to="/power-law-explanation"
-                  className={({ isActive }) =>
-                    `flex items-center px-4 py-3 hover:bg-[#2c333e] transition-colors ${isActive ? 'bg-[#2c333e] text-amber-400 font-medium' : 'text-gray-200'}` // アクティブ時のスタイルを調整
-                  }
-                >
-                  <Info className="h-4 w-4 mr-3" /> {/* アイコンの色は調整不要 */}
-                  <span className="text-sm">パワーロー解説</span>
-                </NavLink>
+              <nav className="absolute right-0 mt-2 bg-[#1a202c]/95 backdrop-blur-md rounded-lg shadow-xl w-64 z-50 overflow-hidden border ${colors.border} animate-slideDown">
+                {navItems.map((item) =>
+                  item.children ? (
+                    <details key={item.label} className="group">
+                      <summary className="flex items-center justify-between px-4 py-3 hover:bg-gray-700/50 transition-all duration-300 text-gray-200 cursor-pointer">
+                        <div className="flex items-center">
+                          {item.icon}
+                          <span className="text-sm font-medium">{item.label}</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4 group-open:rotate-90 transition-transform duration-300" />
+                      </summary>
+                      {item.children.map((subItem) => (
+                        <NavLink
+                          key={subItem.to}
+                          to={subItem.to}
+                          className={({ isActive }) =>
+                            `flex items-center px-6 py-2 hover:bg-gray-700/50 transition-all duration-300 ${isActive ? 'bg-gray-700/50 text-[#3B82F6] font-medium' : 'text-gray-200'
+                            }`
+                          }
+                        >
+                          {subItem.icon}
+                          <span className="text-sm">{subItem.label}</span>
+                        </NavLink>
+                      ))}
+                    </details>
+                  ) : (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        `flex items-center px-4 py-3 hover:bg-gray-700/50 transition-all duration-300 ${isActive ? 'bg-gray-700/50 text-[#3B82F6] font-medium' : 'text-gray-200'
+                        }`
+                      }
+                    >
+                      {item.icon}
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </NavLink>
+                  )
+                )}
               </nav>
             )}
           </div>
         ) : (
-          <nav>
-            <NavLink
-              to="/power-law-explanation"
-              className={({ isActive }) =>
-                `${colors.infoLink} transition-colors px-2 py-1 text-sm flex items-center ${isActive ? 'text-amber-400 font-medium' : ''}`
-              }
-            >
-              <Info className="h-4 w-4 mr-2" />
-              <span>パワーロー解説</span>
-            </NavLink>
+          <nav className="flex items-center space-x-8">
+            {navItems.map((item) =>
+              item.children ? (
+                <div key={item.label} className="relative group">
+                  <div className="flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 transition-all duration-300 cursor-pointer rounded-lg">
+                    {item.icon}
+                    <span className="font-medium">{item.label}</span>
+                    <ChevronDown className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:rotate-180" />
+                  </div>
+                  <div className="absolute left-0 mt-2 w-48 bg-[#1a202c]/95 backdrop-blur-md rounded-lg shadow-xl z-50 overflow-hidden border ${colors.border} opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-y-1">
+                    {item.children.map((subItem) => (
+                      <NavLink
+                        key={subItem.to}
+                        to={subItem.to}
+                        className={({ isActive }) =>
+                          `flex items-center px-4 py-2 hover:bg-gray-700/50 transition-all duration-300 ${isActive ? 'bg-gray-700/50 text-[#3B82F6] font-medium' : 'text-gray-200'
+                          }`
+                        }
+                      >
+                        {subItem.icon}
+                        <span className="text-sm">{subItem.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `${colors.infoLink} transition-all duration-300 px-3 py-2 text-sm flex items-center hover:bg-gray-700/50 rounded-lg ${isActive ? 'text-[#3B82F6] font-medium border-b-2 border-[#3B82F6]' : ''
+                    }`
+                  }
+                >
+                  {item.icon}
+                  <span className="font-medium">{item.label}</span>
+                </NavLink>
+              )
+            )}
           </nav>
         )}
       </div>
@@ -84,12 +177,12 @@ const Header: React.FC = () => {
 };
 
 const globalStyles = `
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out forwards;
 }
 `;
 

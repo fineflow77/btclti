@@ -1,3 +1,4 @@
+// src/utils/constants.ts
 /**
  * プロジェクト全体で使用される定数
  */
@@ -22,6 +23,11 @@ export const TARGET_YEAR: number = 2050;
 /** 現在の年 */
 export const CURRENT_YEAR: number = new Date().getFullYear();
 
+// 環境変数
+export const ENV = {
+  NEWSAPI_KEY: import.meta.env.VITE_NEWSAPI_KEY as string,
+};
+
 /**
  * パワーロー予測モデルの種類
  */
@@ -29,7 +35,7 @@ export enum PriceModel {
   /** 標準モデル（2050年に1000万USD） */
   STANDARD = 'standard',
   /** 保守的モデル（2050年に400万USD） */
-  CONSERVATIVE = 'conservative'
+  CONSERVATIVE = 'conservative',
 }
 
 /**

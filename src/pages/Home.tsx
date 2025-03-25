@@ -1,57 +1,73 @@
+// src/pages/Home.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
 import { useBitcoinData } from '../hooks/useBitcoinData';
 import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
 import { formatCurrency } from '../utils/formatters';
-import { calculatePowerLawPosition, getPowerLawPositionLabel, getPowerLawPositionColor } from '../utils/models';
-import { calculateRSquared, formatPercentage } from '../utils/mathUtils';
+import { calculatePowerLawPosition, getPowerLawPositionLabel } from '../utils/models';
+import { calculateRSquared } from '../utils/mathUtils';
 import DataContainer from '../components/ui/DataContainer';
-import { getDaysSinceGenesis } from '../utils/dateUtils';
 import { ChartLineUp, Wallet as PhosphorWallet } from 'phosphor-react';
+import { BitcoinData, PowerLawDataPoint, WeeklyPrice, DailyPrice } from '../types';
 
 const typography: Record<string, string> = {
-  h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
-  h3: 'text-lg sm:text-xl font-medium',
-  subtitle: 'text-base sm:text-lg font-medium',
-  body: 'text-sm sm:text-base font-normal',
-  small: 'text-xs sm:text-sm font-normal',
+  h1: 'text-3xl sm:text-4xl font-bold tracking-tight',
+  h2: 'text-2xl sm:text-3xl font-semibold',
+  subtitle: 'text-lg sm:text-xl font-medium',
+  body: 'text-base sm:text-lg font-normal',
+  small: 'text-sm sm:text-base font-normal',
+  tiny: 'text-xs sm:text-sm font-light',
 };
 
 const colors: Record<string, string> = {
-  primary: 'bg-green-500 hover:bg-green-600 text-white',
-  secondary: 'bg-blue-500 hover:bg-blue-600 text-white',
-  accent: 'bg-amber-500 hover:bg-amber-600 text-white',
-  cardBg: 'bg-gray-800',
-  cardBorder: 'border border-gray-700',
-  cardBorderHighlight: 'border border-amber-500',
+  primary: 'bg-[#3B82F6] hover:bg-[#2b6cb0] text-white',
+  secondary: 'bg-[#D4AF37] hover:bg-[#b8972f] text-black',
+  accent: 'bg-[#FF69B4] hover:bg-[#e05a9f] text-white', // Pink accent for lower bound related buttons if needed
+  cardBg: 'bg-gray-800/50 backdrop-blur-sm',
+  cardBorder: 'border border-gray-700/50',
+  cardBorderHighlight: 'border border-[#D4AF37]/30',
   textPrimary: 'text-gray-100',
   textSecondary: 'text-gray-300',
   textMuted: 'text-gray-400',
   chartBg: 'bg-transparent',
-  investmentCardBg: 'bg-gradient-to-br from-blue-600 to-blue-500',
-  withdrawalCardBg: 'bg-gradient-to-br from-green-600 to-green-500',
+  investmentCardBg: 'bg-gradient-to-br from-[#3B82F6] to-[#2b6cb0]',
+  withdrawalCardBg: 'bg-gradient-to-br from-[#D4AF37] to-[#b8972f]',
   buttonBg: 'bg-gray-700',
   buttonHover: 'hover:bg-gray-600',
+  tabActive: 'border-b-2 border-[#D4AF37] text-[#D4AF37]',
+  tabInactive: 'text-gray-400 hover:text-gray-200',
+  amber: 'text-[#D4AF37]',
+  green: 'text-[#10B981]', // Adjusted green from green-400 to #10B981 to match central price color
+  red: 'text-red-400',
+  neutral: 'text-[#A3A3A3]',
+  pink: 'text-[#FF69B4]', // Adding pink color for support price
 };
 
 const Home: React.FC = () => {
-  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData();
+  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData() as BitcoinData;
   const [rSquared, setRSquared] = useState<number>(0.9703);
+  const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('log');
 
   useEffect(() => {
     if (weeklyPrices && weeklyPrices.length > 0) {
-      const calculatedRSquared = calculateRSquared(weeklyPrices.map(item => [new Date(item.date).getTime(), item.price]));
+      const calculatedRSquared = calculateRSquared(
+        weeklyPrices.map((item: WeeklyPrice) => [new Date(item.date).getTime(), item.price])
+      );
       if (calculatedRSquared !== null) setRSquared(calculatedRSquared);
     }
   }, [weeklyPrices]);
 
   const powerLawPosition = useMemo(() => {
-    if (!currentPrice || !powerLawData || powerLawData.length === 0) return null;
-    const latestNonFutureData = [...powerLawData]
-      .filter(item => !item.isFuture && item.price !== null)
-      .sort((a, b) => b.date - a.date)[0];
-    if (!latestNonFutureData || !currentPrice.prices.usd) return null;
+    if (!currentPrice || !powerLawData || !currentPrice.prices || !currentPrice.prices.usd) return null;
+
+    // Get the latest non-future data point
+    const now = Date.now();
+    const latestNonFutureData = powerLawData
+      .filter((item: PowerLawDataPoint) => item.date <= now)
+      .sort((a: PowerLawDataPoint, b: PowerLawDataPoint) => b.date - a.date)[0];
+
+    if (!latestNonFutureData) return null;
 
     return calculatePowerLawPosition(
       currentPrice.prices.usd,
@@ -62,7 +78,9 @@ const Home: React.FC = () => {
 
   const priceChangePercentage = useMemo(() => {
     if (!currentPrice || !dailyPrices || dailyPrices.length < 2) return null;
-    const sortedPrices = [...dailyPrices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const sortedPrices = [...dailyPrices].sort(
+      (a: DailyPrice, b: DailyPrice) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
     if (sortedPrices.length < 2 || !currentPrice.prices.usd) return null;
     const latestPrice = currentPrice.prices.usd;
     const yesterdayPrice = sortedPrices[1].price;
@@ -72,79 +90,38 @@ const Home: React.FC = () => {
   const { medianPrice, supportPrice } = useMemo(() => {
     if (!powerLawData || powerLawData.length === 0) return { medianPrice: 0, supportPrice: 0 };
     const now = Date.now();
-    const closestPoint = powerLawData.reduce((closest, current) => {
-      const currentDiff = Math.abs(current.date - now);
-      const closestDiff = Math.abs(closest.date - now);
-      return currentDiff < closestDiff ? current : closest;
-    });
+    const closestPoint = powerLawData.reduce(
+      (closest: PowerLawDataPoint, current: PowerLawDataPoint) => {
+        const currentDiff = Math.abs(current.date - now);
+        const closestDiff = Math.abs(closest.date - now);
+        return currentDiff < closestDiff ? current : closest;
+      },
+      powerLawData[0]
+    );
     return { medianPrice: closestPoint.medianModel, supportPrice: closestPoint.supportModel };
   }, [powerLawData]);
 
-  const daysCount = useMemo(() => getDaysSinceGenesis(new Date()), []);
+  const medianDeviation = useMemo(() => {
+    if (!currentPrice || !medianPrice) return null;
+    return ((currentPrice.prices.usd - medianPrice) / medianPrice) * 100;
+  }, [currentPrice, medianPrice]);
+
+  const supportDeviation = useMemo(() => {
+    if (!currentPrice || !supportPrice) return null;
+    return ((currentPrice.prices.usd - supportPrice) / supportPrice) * 100;
+  }, [currentPrice, supportPrice]);
+
+  const chartDataToUse = powerLawData || [];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-0 bg-transparent text-gray-100 space-y-6">
-        {/* シミュレーターへの導線 */}
-        <div className="text-center mt-10">
-          <p className="text-lg text-gray-300 mb-6">長期ビットコイン投資による資産形成を考える</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <Link
-              to="/simulators/withdrawal"
-              className={`${colors.withdrawalCardBg} p-4 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-start justify-between h-auto`}
-            >
-              <div>
-                <PhosphorWallet size={32} weight="fill" className="text-white mb-0" />
-                <h2 className={`${typography.h2} text-white mb-1`}>取り崩しシミュレーター</h2>
-                <p className="text-gray-100 text-sm">保有するビットコインから定期的に引き出す場合の資産推移をシミュレーション</p>
-              </div>
-              <span className={`${colors.buttonBg} ${colors.buttonHover} px-4 py-2 rounded-full text-white text-sm font-medium mt-4 self-start flex items-center`}>
-                シミュレーターを利用する <ArrowUpRight className="ml-1" size={16} />
-              </span>
-            </Link>
-            <Link
-              to="/simulators/investment"
-              className={`${colors.investmentCardBg} p-4 rounded-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col items-start justify-between h-auto`}
-            >
-              <div>
-                <ChartLineUp size={32} weight="fill" className="text-white mb-0" />
-                <h2 className={`${typography.h2} text-white mb-1`}>積み立てシミュレーター</h2>
-                <p className="text-gray-100 text-sm">毎月の積立投資でビットコインを購入した場合の資産推移をシミュレーション</p>
-              </div>
-              <span className={`${colors.buttonBg} ${colors.buttonHover} px-4 py-2 rounded-full text-white text-sm font-medium mt-4 self-start flex items-center`}>
-                シミュレーターを利用する <ArrowUpRight className="ml-1" size={16} />
-              </span>
-            </Link>
-          </div>
-        </div>
-
-        {/* トラッカー部分のサブタイトル */}
-        <div className="flex items-center justify-center mt-10 mb-4">
-          <TrendingUp className="h-6 w-6 mr-2 text-amber-400" />
-          <h2 className={`${typography.subtitle} text-amber-400`}>ビットコイン価格トラッカー</h2>
-        </div>
-
-        {/* 最終更新 & 為替レート */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-xs text-gray-400">
-            為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
-          </div>
-          <div className="text-xs text-gray-400">
-            {currentPrice && (
-              <span>
-                最終更新: {new Date(currentPrice.timestamp).toLocaleString('ja-JP', { timeStyle: 'short' })}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* 価格カード3枚 */}
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
+      <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        {/* 価格カード */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div
-            className={`${colors.cardBg} p-5 rounded-xl shadow-md ${colors.cardBorderHighlight} transform transition-transform hover:-translate-y-1 duration-300`}
-          >
-            <h3 className={`${typography.h3} text-amber-400 mb-1 flex items-center`}>
-              <span className="w-3 h-3 rounded-full bg-amber-500 mr-2 animate-pulse" /> 現在価格
+          {/* 現在価格カード */}
+          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+            <h3 className={`${typography.subtitle} ${colors.amber} mb-3 flex items-center`}>
+              <TrendingUp className="h-5 w-5 mr-2" /> 現在価格
             </h3>
             <DataContainer
               isLoading={loading}
@@ -154,34 +131,37 @@ const Home: React.FC = () => {
             >
               {currentPrice && currentPrice.prices.usd ? (
                 <div className="space-y-2">
-                  <div className="text-2xl font-bold text-amber-400">
+                  <div className="text-3xl font-bold text-[#D4AF37]">
                     {formatCurrency(currentPrice.prices.jpy, 'JPY')}
                   </div>
-                  <div className="text-sm text-gray-300">
+                  <div className={`${typography.tiny} ${colors.textMuted}`}>
                     ({formatCurrency(currentPrice.prices.usd, 'USD')})
                   </div>
                   {priceChangePercentage !== null && (
-                    <div className={`text-sm font-medium ${priceChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'} flex items-center`}>
-                      <span aria-label={priceChangePercentage >= 0 ? '上昇' : '下降'} className={`mr-1 ${priceChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {priceChangePercentage >= 0 ? '↑' : '↓'}
-                      </span>
+                    <div className={`${typography.tiny} font-medium ${priceChangePercentage >= 0 ? 'text-green-400' : colors.red // Use text-green-400 for positive change
+                      }`}
+                    >
                       前日比: {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(2)}%
                     </div>
                   )}
                   {powerLawPosition !== null && (
-                    <div className="text-sm font-medium flex items-center" style={{ color: getPowerLawPositionColor(powerLawPosition) }} aria-label={`パワーロー位置: ${formatPercentage(powerLawPosition)}`}>
-                      パワーロー位置: {formatPercentage(powerLawPosition)}
-                      <span className="ml-1 text-xs">({getPowerLawPositionLabel(powerLawPosition)})</span>
+                    <div className="mt-2">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${powerLawPosition > 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                          } hover:bg-[#b8972f]/20 hover:text-[#b8972f] transition-all duration-300`}
+                      >
+                        {getPowerLawPositionLabel(powerLawPosition)}
+                      </span>
                     </div>
                   )}
                 </div>
               ) : null}
             </DataContainer>
           </div>
-          <div className={`${colors.cardBg} p-5 rounded-xl shadow-md ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-            <h3 className={`${typography.h3} text-green-400 mb-3 flex items-center`}>
-              <span className="w-3 h-3 rounded-full bg-green-500 mr-2" /> 本日のパワーロー中央価格
-            </h3>
+
+          {/* 中央価格カード */}
+          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+            <h3 className={`${typography.subtitle} ${colors.green} mb-3`}>本日のパワーロー 中央価格</h3>
             <DataContainer
               isLoading={loading}
               error={error}
@@ -190,21 +170,28 @@ const Home: React.FC = () => {
             >
               {powerLawData && powerLawData.length > 0 ? (
                 <div className="space-y-2">
-                  <div className="text-lg font-medium text-green-400">
+                  <div className="text-2xl font-semibold text-[#10B981]">
                     {formatCurrency(medianPrice * exchangeRate, 'JPY')}
                   </div>
-                  <div className="text-xs text-gray-300">
+                  <div className={`${typography.tiny} ${colors.textMuted}`}>
                     ({formatCurrency(medianPrice, 'USD')})
                   </div>
-                  <div className="text-xs text-gray-400">累計日数: {daysCount.toLocaleString()} 日</div>
+                  {medianDeviation !== null && (
+                    <div
+                      className={`${typography.tiny} font-medium ${medianDeviation >= 0 ? 'text-red-400' : 'text-green-400' // red for above median, green for below
+                        }`}
+                    >
+                      現在価格は中央価格より {medianDeviation.toFixed(1)}% 乖離
+                    </div>
+                  )}
                 </div>
               ) : null}
             </DataContainer>
           </div>
-          <div className={`${colors.cardBg} p-5 rounded-xl shadow-md ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-            <h3 className={`${typography.h3} text-red-400 mb-3 flex items-center`}>
-              <span className="w-3 h-3 rounded-full bg-red-500 mr-2" /> 本日のパワーロー下限価格
-            </h3>
+
+          {/* 下限価格カード */}
+          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+            <h3 className={`${typography.subtitle} ${colors.pink} mb-3`}>本日のパワーロー 下限価格</h3>
             <DataContainer
               isLoading={loading}
               error={error}
@@ -213,80 +200,134 @@ const Home: React.FC = () => {
             >
               {powerLawData && powerLawData.length > 0 ? (
                 <div className="space-y-2">
-                  <div className="text-lg font-medium text-red-400">
+                  <div className="text-2xl font-semibold text-[#FF69B4]">
                     {formatCurrency(supportPrice * exchangeRate, 'JPY')}
                   </div>
-                  <div className="text-xs text-gray-300">
+                  <div className={`${typography.tiny} ${colors.textMuted}`}>
                     ({formatCurrency(supportPrice, 'USD')})
                   </div>
-                  <div className="text-xs text-gray-400">　</div>
+                  {supportDeviation !== null && (
+                    <div
+                      className={`${typography.tiny} font-medium ${supportDeviation >= 0 ? 'text-green-400' : 'text-red-400' // green for above support, red for below
+                        }`}
+                    >
+                      現在価格は、この価格より {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}% 乖離
+                    </div>
+                  )}
                 </div>
               ) : null}
             </DataContainer>
           </div>
         </div>
 
-        <div className="py-6"></div> {/* スペーサー */}
+        {/* 為替レートと最終更新 */}
+        <div className="flex justify-between items-center bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 shadow-md">
+          <div className={`${typography.small} ${colors.textMuted}`}>
+            為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
+          </div>
+          <div className={`${typography.small} ${colors.textMuted}`}>
+            {currentPrice && (
+              <span>
+                最終更新: {new Date(currentPrice.timestamp).toLocaleString('ja-JP', { timeStyle: 'short' })}
+              </span>
+            )}
+          </div>
+        </div>
 
-        {/* チャート部分 */}
-        <div className="mb-8 mt-2">
-          <h2 className="text-center text-lg font-medium text-amber-400 mb-4">ビットコイン長期価格予測（パワーローモデル）</h2>
-          <div className={`rounded-xl ${colors.cardBorder} overflow-hidden`}>
+        {/* メイン：タブ付きパワーローチャート */}
+        <div className="mt-12">
+          <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-6`}>
+            長期パワーローチャート
+          </h1>
+          <div className="flex justify-center mb-6 space-x-4">
+            <button
+              onClick={() => setActiveTab('log')}
+              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'log' ? colors.tabActive : colors.tabInactive
+                } hover:bg-gray-700/50`}
+            >
+              対数スケール
+            </button>
+            <button
+              onClick={() => setActiveTab('loglog')}
+              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'loglog' ? colors.tabActive : colors.tabInactive
+                } hover:bg-gray-700/50`}
+            >
+              対数-対数スケール
+            </button>
+          </div>
+          <div className={`rounded-2xl ${colors.cardBorder} overflow-hidden shadow-lg`}>
             <DataContainer
               isLoading={loading}
               error={error}
               loadingMessage="チャートデータ取得中..."
-              noDataMessage="チャートデータが利用できません"
+              noDataMessage="チャートデータがありません"
             >
-              {powerLawData && powerLawData.length > 0 ? (
-                <PowerLawChartWrapper
-                  rSquared={rSquared}
-                  chartData={powerLawData}
-                  exchangeRate={exchangeRate}
-                  currentPrice={currentPrice?.prices.usd ?? 0}
-                  height={800}
-
-                  powerLawPosition={powerLawPosition}
-                />
-              ) : null}
+              <PowerLawChartWrapper
+                rSquared={rSquared}
+                chartData={chartDataToUse}
+                exchangeRate={exchangeRate || 1}
+                currentPrice={currentPrice?.prices.usd}
+                height={500}
+                isLogScale={activeTab === 'log'}
+              />
             </DataContainer>
           </div>
-        </div>
-
-        {/* パワーロー解説セクション */}
-        <div className={`${colors.cardBg} p-5 rounded-xl shadow-md ${colors.cardBorder}`}>
-          <h2 className={`${typography.h3} text-amber-400 mb-3 flex items-center`}>
-            <Info className="h-4 w-4 mr-2 text-amber-400" />
-            パワーローとは
-          </h2>
-          <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-            ビットコインは、株式等と異なり、パワーローと呼ばれる自然法則に従い、定期的にバブルを発生させながら成長していくことがわかっています。ビットコイン価格のボラリティリティが大きいのは事実ですが、対数変換すると右肩上がりでの成長が読み取れます。
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-              <h3 className={`${typography.subtitle} text-green-400`}>中央価格</h3>
-              <p className={`${typography.small} ${colors.textSecondary}`}>
-                パワーローモデルが予測する妥当な価格。チャート左上の「決定係数（R²）」は、1に近いほど精度が高い。
-              </p>
-            </div>
-            <div className="space-y-2 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-              <h3 className={`${typography.subtitle} text-red-400`}>下限価格</h3>
-              <p className={`${typography.small} ${colors.textSecondary}`}>
-                暴落時含め、歴史的にほとんど割れることのない強力なサポートライン。買い場の目安となる。
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 text-right">
+          <div className="mt-6 text-center">
             <Link
               to="/power-law-explanation"
-              className="text-amber-400 hover:text-amber-300 text-sm font-medium inline-flex items-center group"
+              className="text-[#3B82F6] hover:text-[#2b6cb0] text-sm font-medium inline-flex items-center group"
             >
-              詳しく学ぶ{' '}
+              パワーローについて詳しく学ぶ{' '}
               <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">
                 →
               </span>
             </Link>
           </div>
+        </div>
+
+        {/* シミュレーターへの導線 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+          <Link
+            to="/simulators/investment"
+            className={`${colors.investmentCardBg} p-6 rounded-2xl shadow-lg flex items-center justify-between transition-transform duration-300 hover:scale-105 hover:shadow-xl ${colors.cardBorderHighlight}`}
+          >
+            <div>
+              <h3 className={`${typography.h2} ${colors.textPrimary} mb-2 flex items-center`}>
+                <ChartLineUp className="h-6 w-6 mr-2" />
+                積み立てシミュレーター
+              </h3>
+              <p className={`${typography.body} ${colors.textSecondary}`}>
+                毎月一定額を投資した場合の将来価値をシミュレーションできます。
+              </p>
+            </div>
+            <ArrowUpRight className="h-6 w-6 text-white" />
+          </Link>
+          <Link
+            to="/simulators/withdrawal"
+            className={`${colors.withdrawalCardBg} p-6 rounded-2xl shadow-lg flex items-center justify-between transition-transform duration-300 hover:scale-105 hover:shadow-xl ${colors.cardBorderHighlight}`}
+          >
+            <div>
+              <h3 className={`${typography.h2} ${colors.textPrimary} mb-2 flex items-center`}>
+                <PhosphorWallet className="h-6 w-6 mr-2" />
+                取り崩しシミュレーター
+              </h3>
+              <p className={`${typography.body} ${colors.textSecondary}`}>
+                資産を取り崩しながら運用した場合のシミュレーションができます。
+              </p>
+            </div>
+            <ArrowUpRight className="h-6 w-6 text-white" />
+          </Link>
+        </div>
+
+        {/* ニュースと分析への導線 */}
+        <div className="text-center mt-12">
+          <Link
+            to="/analysis-news"
+            className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
+          >
+            最新の価格分析とニュースを見る
+            <Info className="ml-2 h-4 w-4" />
+          </Link>
         </div>
       </div>
     </div>

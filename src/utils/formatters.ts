@@ -59,16 +59,16 @@ export const formatBTC = (
 /**
  * パーセント値をフォーマットする関数
  * @param value フォーマットするパーセント値
- * @param decimals 小数点以下の桁数
- * @param includeSign プラス記号を含めるかどうか
+ * @param options フォーマットオプション（小数点以下の桁数とプラス記号の表示設定）
  * @returns フォーマットされたパーセント文字列
  */
 export const formatPercentage = (
   value: number | null | undefined,
-  decimals: number = 1,
-  includeSign: boolean = true
+  options: { decimals?: number; includeSign?: boolean } = {}
 ): string => {
   if (value === null || value === undefined || isNaN(value)) return '-';
+
+  const { decimals = 1, includeSign = true } = options;
 
   try {
     const prefix = includeSign && value > 0 ? '+' : '';

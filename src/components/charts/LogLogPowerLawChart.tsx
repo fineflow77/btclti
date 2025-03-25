@@ -1,6 +1,7 @@
 // src/components/charts/LogLogPowerLawChart.tsx
 import React from 'react';
-import PowerLawChart, { PowerLawChartProps } from './PowerLawChart';
+import PowerLawChart from './PowerLawChart';
+import { PowerLawChartProps } from '../../types';
 
 interface LogLogPowerLawChartProps extends Omit<PowerLawChartProps, 'xAxisScale' | 'yAxisScale' | 'height'> {
     height?: number;
@@ -18,4 +19,3 @@ const LogLogPowerLawChart: React.FC<LogLogPowerLawChartProps> = (props) => {
 };
 
 export default LogLogPowerLawChart;
-

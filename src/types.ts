@@ -1,23 +1,45 @@
 // src/types.ts
+export interface PriceData {
+    usd: number;
+    jpy: number;
+}
+
+export interface CurrentPrice {
+    prices: PriceData;
+    timestamp: string;
+    source?: string;
+}
+
+export interface PowerLawDataPoint {
+    date: number;
+    price: number | null;
+    medianModel: number;
+    supportModel: number;
+    isFuture: boolean;
+    daysSinceGenesis: number;
+}
+
+export interface WeeklyPrice {
+    date: string;
+    price: number;
+}
+
+export interface DailyPrice {
+    date: string;
+    price: number;
+}
+
 export interface BitcoinData {
     loading: boolean;
     error: Error | null;
-    currentPrice: {
-        prices: { usd: number; jpy: number };
-        timestamp: string;
-    } | null;
+    currentPrice: CurrentPrice | null;
+    dailyPrices: DailyPrice[];
+    weeklyPrices: WeeklyPrice[];
+    powerLawData: PowerLawDataPoint[];
+    dailyPowerLawData: PowerLawDataPoint[];
     exchangeRate: number;
-    weeklyPrices: { date: string; price: number }[];
-    powerLawData: {
-        date: number;
-        price: number | null;
-        medianModel: number;
-        supportModel: number;
-        isFuture: boolean;
-    }[];
-    dailyPrices: { date: string; price: number }[];
     rSquared: number | null;
-    networkData?: any; // 使用しない場合は削除可能、必要なら具体的な型を指定
+    dataSources: { currentPrice?: string; dailyPrices?: string; weeklyPrices?: string };
 }
 
 export interface DataContainerProps {
@@ -25,22 +47,28 @@ export interface DataContainerProps {
     isLoading: boolean;
     error: Error | null;
     loadingMessage: string;
-    noDataMessage: string; // 追加
+    noDataMessage: string;
+    className?: string;
+}
+
+export interface PowerLawChartProps {
+    exchangeRate: number;
+    rSquared: number | null;
+    chartData: PowerLawDataPoint[];
+    currentPrice: number | undefined;
+    height?: number;
+    xAxisScale?: 'linear' | 'log';
+    yAxisScale?: 'linear' | 'log';
+    showRSquared?: boolean;
+    chartTitle?: string;
+    isLogScale?: boolean; // 追加
 }
 
 export interface PowerLawChartWrapperProps {
-    rSquared: number; // 追加
-    chartData: {
-        date: number;
-        price: number | null;
-        medianModel: number;
-        supportModel: number;
-        isFuture: boolean;
-        daysSinceGenesis?: number; // オプションとして追加
-    }[];
+    rSquared: number;
+    chartData: PowerLawDataPoint[];
     exchangeRate: number;
     currentPrice: number | undefined;
     height: number;
-    isZoomed: boolean;
-    powerLawPosition: number | null;
+    isLogScale: boolean;
 }

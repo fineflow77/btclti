@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChevronDown, ChevronUp, Settings, HelpCircle } from "lucide-react";
 import { formatYen, formatBTC, formatPercentage } from '../../utils/formatters';
@@ -6,7 +6,7 @@ import { DEFAULTS, CURRENT_YEAR, PriceModel } from '../../utils/constants';
 import { useWithdrawalSimulation, WithdrawalInputs } from '../../hooks/useWithdrawalSimulation';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
-// Home.tsx から借用したスタイル（変更なし）
+// スタイル定義（再利用性を高めるため）
 const typography = {
     h1: 'text-3xl sm:text-4xl font-extrabold tracking-tight',
     h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
@@ -24,19 +24,24 @@ const colors = {
     textPrimary: 'text-gray-100',
     textSecondary: 'text-gray-300',
     textMuted: 'text-gray-400',
+    error: 'text-red-500',
+    success: 'text-green-400',
 };
 
-// ツールチップアイコンコンポーネント（変更なし）
+// ツールチップアイコンコンポーネント
 const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
     <div className="group relative inline-block ml-2">
-        <HelpCircle className="h-4 w-4 text-gray-400 hover:text-gray-300 cursor-help transition-colors duration-200" />
+        <HelpCircle
+            className="h-4 w-4 text-gray-400 hover:text-gray-300 cursor-help transition-colors duration-200"
+            aria-label="ツールチップ"
+        />
         <div className="invisible group-hover:visible absolute z-10 w-64 p-2 mt-2 text-sm text-gray-300 bg-gray-800 rounded-lg shadow-lg -translate-x-1/2 left-1/2">
             {content}
         </div>
     </div>
 );
 
-// インプットフィールドコンポーネント（変更なし）
+// インプットフィールドコンポーネント
 const InputField: React.FC<{
     label: string;
     tooltip?: React.ReactNode;
@@ -49,10 +54,11 @@ const InputField: React.FC<{
             {tooltip && <TooltipIcon content={tooltip} />}
         </div>
         {children}
-        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        {error && <p className={`${colors.error} text-xs mt-1`}>{error}</p>}
     </div>
 );
 
+// ツールチップの内容
 const TOOLTIPS = {
     initialBTC: "現在保有しているビットコインの量を入力してください。",
     withdrawalAmount: "毎月の生活費として必要な金額を入力してください。税引き後の手取り額として計算されます。",
@@ -62,13 +68,130 @@ const TOOLTIPS = {
     exchangeRate: "円ドルの為替レートを設定します。",
     inflationRate: "年間の物価上昇率を設定します。",
     priceModel: (
-        <React.Fragment>
+        <>
             <p>標準モデル：HC Burgerが提唱するパワーロー方程式を基に、2039年以降滑らかに減衰し2050年で1000万ドルに到達すると仮定。ビットコインが従来の法定通貨に代わる世界的な基軸通貨になるシナリオ（ビットコインスタンダード）。</p>
             <p className="mt-2">保守的モデル：HC Burgerが提唱するパワーロー方程式を控えめに調整し、2039年以降滑らかに減衰し2050年で400万ドルに到達すると仮定。ビットコインがゴールド（金）の4倍程度の時価総額になり、価値の保存手段の定番になるシナリオ。</p>
-        </React.Fragment>
+        </>
     ),
 };
 
+// シミュレーション結果のハイライトコンポーネント
+const SimulationHighlights: React.FC<{
+    initialBTC: string;
+    startYear: string;
+    withdrawalType: 'fixed' | 'percentage';
+    withdrawalAmount: string;
+    withdrawalRate: string;
+    results: any[];
+}> = ({ initialBTC, startYear, withdrawalType, withdrawalAmount, withdrawalRate, results }) => {
+    const zeroIndex = results.findIndex(r => r.remainingBTC <= 0);
+    const zeroYear = zeroIndex !== -1 ? results[zeroIndex].year : null;
+    const fiveYearsLaterValue = results.find(r => r.year === CURRENT_YEAR + 5)?.totalValue || 0;
+
+    return (
+        <div className={`block md:hidden ${colors.cardBg} p-4 rounded-xl shadow-md space-y-3`}>
+            <h3 className={`${typography.h3} ${colors.textPrimary} mb-2`}>ハイライト</h3>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>BTC初期保有量</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {formatBTC(parseFloat(initialBTC) || 0, 4)}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>取り崩し開始年</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>{startYear}年</div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>
+                    {withdrawalType === "fixed" ? "月額取り崩し" : "年間取り崩し率"}
+                </div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {withdrawalType === "fixed"
+                        ? formatYen(parseFloat(withdrawalAmount) || 0, 2)
+                        : formatPercentage(parseFloat(withdrawalRate) || 0, { decimals: 2 })}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>資金寿命</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {zeroYear
+                        ? `${zeroYear}年（${zeroYear - parseInt(startYear)}年間）`
+                        : "2050年以降も維持"}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>5年後の資産評価額</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {formatYen(fiveYearsLaterValue, 2)}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// シミュレーション結果テーブルコンポーネント
+const SimulationResultsTable: React.FC<{
+    results: any[];
+    showSecondPhase: boolean;
+}> = ({ results, showSecondPhase }) => (
+    <div className={`hidden md:block ${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
+        <div className="flex justify-between mb-4">
+            <h3 className={`${typography.h3} ${colors.textPrimary}`}>シミュレーション結果</h3>
+        </div>
+        <div className="overflow-x-auto -mx-6 px-6">
+            <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-700">
+                    <tr>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC価格</th>
+                        {showSecondPhase && (
+                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>段階</th>
+                        )}
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し率</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し額</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩しBTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>残り保有BTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>資産評価額</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                    {results.map((result) => (
+                        <tr key={result.year} className={result.year % 2 === 0 ? "bg-gray-800" : "bg-gray-750 hover:bg-gray-700 transition-colors duration-200"}>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.year}</td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatYen(result.btcPrice, 2)}</td>
+                            {showSecondPhase && (
+                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.phase}</td>
+                            )}
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalRate === 'number'
+                                    ? formatPercentage(result.withdrawalRate, { decimals: 2 })
+                                    : result.withdrawalRate}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalAmount === 'number'
+                                    ? formatYen(result.withdrawalAmount, 2)
+                                    : result.withdrawalAmount}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalBTC === 'number'
+                                    ? formatBTC(result.withdrawalBTC, 4)
+                                    : result.withdrawalBTC}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {formatBTC(result.remainingBTC, 4)}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {formatYen(result.totalValue, 2)}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+);
+
+// メインコンポーネント
 const WithdrawalSimulator: React.FC = () => {
     const [initialBTC, setInitialBTC] = useState("");
     const [startYear, setStartYear] = useState("2025");
@@ -89,7 +212,7 @@ const WithdrawalSimulator: React.FC = () => {
 
     const { results, errors, simulate } = useWithdrawalSimulation();
 
-    const runSimulation = () => {
+    const runSimulation = useCallback(() => {
         setIsCalculating(true);
         const inputs: WithdrawalInputs = {
             initialBTC,
@@ -105,13 +228,29 @@ const WithdrawalSimulator: React.FC = () => {
             secondPhaseRate,
             taxRate,
             exchangeRate,
-            inflationRate
+            inflationRate,
         };
         setTimeout(() => {
             simulate(inputs);
             setIsCalculating(false);
         }, 500);
-    };
+    }, [
+        initialBTC,
+        startYear,
+        priceModel,
+        withdrawalType,
+        withdrawalAmount,
+        withdrawalRate,
+        showSecondPhase,
+        secondPhaseYear,
+        secondPhaseType,
+        secondPhaseAmount,
+        secondPhaseRate,
+        taxRate,
+        exchangeRate,
+        inflationRate,
+        simulate,
+    ]);
 
     const chartData = useMemo(() => {
         if (results.length > 0) {
@@ -128,7 +267,9 @@ const WithdrawalSimulator: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900 min-h-screen text-gray-100 space-y-8">
             <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
                 <h1 className={`${typography.h1} ${colors.textPrimary} mb-6 flex items-center justify-center`}>
-                    <span className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">ビットコイン取り崩しシミュレーター</span>
+                    <span className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">
+                        ビットコイン取り崩しシミュレーター
+                    </span>
                 </h1>
 
                 <div className="space-y-6">
@@ -162,8 +303,9 @@ const WithdrawalSimulator: React.FC = () => {
                         <InputField label="価格予測モデル" tooltip={TOOLTIPS.priceModel}>
                             <select
                                 value={priceModel}
-                                onChange={(e) => setPriceModel(e.target.value as PriceModel)} // PriceModelにキャスト
+                                onChange={(e) => setPriceModel(e.target.value as PriceModel)}
                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                aria-label="価格予測モデル"
                             >
                                 <option value={PriceModel.STANDARD}>標準モデル</option>
                                 <option value={PriceModel.CONSERVATIVE}>保守的モデル</option>
@@ -172,11 +314,12 @@ const WithdrawalSimulator: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputField label="取り崩し方法" error={errors.withdrawalRate}> {/* withdrawalType → withdrawalRate */}
+                        <InputField label="取り崩し方法" error={errors.withdrawalRate}>
                             <select
                                 value={withdrawalType}
                                 onChange={(e) => setWithdrawalType(e.target.value as 'fixed' | 'percentage')}
                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                aria-label="取り崩し方法"
                             >
                                 <option value="fixed">定額（月額）</option>
                                 <option value="percentage">定率（年率）</option>
@@ -195,6 +338,7 @@ const WithdrawalSimulator: React.FC = () => {
                                     className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                     placeholder={withdrawalType === "fixed" ? "例: 200000" : "例: 4"}
                                     step={withdrawalType === "fixed" ? "1000" : "0.1"}
+                                    aria-label={withdrawalType === "fixed" ? "取り崩し額（月額）" : "取り崩し率（年率）"}
                                 />
                                 <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                     {withdrawalType === "fixed" ? "円" : "%"}
@@ -210,6 +354,7 @@ const WithdrawalSimulator: React.FC = () => {
                                 checked={showSecondPhase}
                                 onChange={(e) => setShowSecondPhase(e.target.checked)}
                                 className="rounded bg-gray-600 focus:ring-2 focus:ring-amber-500 transition-all duration-200"
+                                aria-label="2段階目の設定を有効にする"
                             />
                             <span className={`${typography.body} ${colors.textSecondary}`}>2段階目の設定を有効にする</span>
                             <TooltipIcon content={TOOLTIPS.secondPhase} />
@@ -221,6 +366,7 @@ const WithdrawalSimulator: React.FC = () => {
                                         value={secondPhaseYear}
                                         onChange={(e) => setSecondPhaseYear(e.target.value)}
                                         className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                        aria-label="2段階目開始年"
                                     >
                                         {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
                                             <option key={year} value={year}>{year}年</option>
@@ -228,11 +374,12 @@ const WithdrawalSimulator: React.FC = () => {
                                     </select>
                                 </InputField>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputField label="2段階目取り崩し方法" error={errors.secondPhaseRate}> {/* secondPhaseType → secondPhaseRate */}
+                                    <InputField label="2段階目取り崩し方法" error={errors.secondPhaseRate}>
                                         <select
                                             value={secondPhaseType}
                                             onChange={(e) => setSecondPhaseType(e.target.value as 'fixed' | 'percentage')}
                                             className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                            aria-label="2段階目取り崩し方法"
                                         >
                                             <option value="fixed">定額（月額）</option>
                                             <option value="percentage">定率（年率）</option>
@@ -250,6 +397,7 @@ const WithdrawalSimulator: React.FC = () => {
                                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                                 placeholder={secondPhaseType === "fixed" ? "例: 200000" : "例: 4"}
                                                 step={secondPhaseType === "fixed" ? "1000" : "0.1"}
+                                                aria-label={secondPhaseType === "fixed" ? "2段階目取り崩し額（月額）" : "2段階目取り崩し率（年率）"}
                                             />
                                             <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                                 {secondPhaseType === "fixed" ? "円" : "%"}
@@ -262,18 +410,24 @@ const WithdrawalSimulator: React.FC = () => {
                     </div>
 
                     <div className="mt-4">
-                        <div
+                        <button
                             className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${showAdvancedOptions ? 'bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`}
                             onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                            aria-expanded={showAdvancedOptions}
+                            aria-controls="advanced-options"
                         >
                             <div className="flex items-center space-x-2">
                                 <Settings size={18} className={colors.textSecondary} />
                                 <span className={`${typography.body} ${colors.textSecondary}`}>詳細設定</span>
                             </div>
-                            {showAdvancedOptions ? <ChevronUp size={18} className={colors.textPrimary} /> : <ChevronDown size={18} className={colors.textSecondary} />}
-                        </div>
+                            {showAdvancedOptions ? (
+                                <ChevronUp size={18} className={colors.textPrimary} />
+                            ) : (
+                                <ChevronDown size={18} className={colors.textSecondary} />
+                            )}
+                        </button>
                         {showAdvancedOptions && (
-                            <div className="mt-4 space-y-4 p-4 bg-gray-700 rounded-md">
+                            <div id="advanced-options" className="mt-4 space-y-4 p-4 bg-gray-700 rounded-md">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <InputField label="税率 (%)" tooltip={TOOLTIPS.taxRate} error={errors.taxRate}>
                                         <input
@@ -283,6 +437,7 @@ const WithdrawalSimulator: React.FC = () => {
                                             className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                             step="0.1"
                                             placeholder="例: 20.315"
+                                            aria-label="税率"
                                         />
                                     </InputField>
                                     <InputField label="為替レート (円/USD)" tooltip={TOOLTIPS.exchangeRate} error={errors.exchangeRate}>
@@ -293,6 +448,7 @@ const WithdrawalSimulator: React.FC = () => {
                                             className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                             step="0.1"
                                             placeholder="例: 150"
+                                            aria-label="為替レート"
                                         />
                                     </InputField>
                                     <InputField label="インフレ率 (%)" tooltip={TOOLTIPS.inflationRate} error={errors.inflationRate}>
@@ -303,6 +459,7 @@ const WithdrawalSimulator: React.FC = () => {
                                             className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                             step="0.1"
                                             placeholder="例: 0"
+                                            aria-label="インフレ率"
                                         />
                                     </InputField>
                                 </div>
@@ -315,6 +472,7 @@ const WithdrawalSimulator: React.FC = () => {
                             onClick={runSimulation}
                             disabled={isCalculating}
                             className={`${colors.accent} w-full p-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-opacity-50 shadow-md flex justify-center items-center ${isCalculating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            aria-label={isCalculating ? "計算中" : "シミュレーション実行"}
                         >
                             {isCalculating ? (
                                 <>
@@ -352,7 +510,7 @@ const WithdrawalSimulator: React.FC = () => {
                                             value: 'BTC残高',
                                             angle: -90,
                                             position: 'insideLeft',
-                                            style: { fill: '#34D399', fontSize: 12, fontWeight: 500 }
+                                            style: { fill: '#34D399', fontSize: 12, fontWeight: 500 },
                                         }}
                                     />
                                     <YAxis
@@ -365,7 +523,7 @@ const WithdrawalSimulator: React.FC = () => {
                                             value: '資産評価額',
                                             angle: 90,
                                             position: 'insideRight',
-                                            style: { fill: '#60A5FA', fontSize: 12, fontWeight: 500 }
+                                            style: { fill: '#60A5FA', fontSize: 12, fontWeight: 500 },
                                         }}
                                     />
                                     <Tooltip
@@ -403,96 +561,19 @@ const WithdrawalSimulator: React.FC = () => {
                             </ResponsiveContainer>
                         </div>
 
-                        <div className={`block md:hidden ${colors.cardBg} p-4 rounded-xl shadow-md space-y-3`}>
-                            <h3 className={`${typography.h3} ${colors.textPrimary} mb-2`}>ハイライト</h3>
-                            <div className="bg-gray-700 p-3 rounded-md">
-                                <div className={`${typography.small} ${colors.textMuted}`}>BTC初期保有量</div>
-                                <div className={`${typography.body} ${colors.textPrimary}`}>{formatBTC(parseFloat(initialBTC) || 0, 4)}</div>
-                            </div>
-                            <div className="bg-gray-700 p-3 rounded-md">
-                                <div className={`${typography.small} ${colors.textMuted}`}>取り崩し開始年</div>
-                                <div className={`${typography.body} ${colors.textPrimary}`}>{startYear}年</div>
-                            </div>
-                            <div className="bg-gray-700 p-3 rounded-md">
-                                <div className={`${typography.small} ${colors.textMuted}`}>
-                                    {withdrawalType === "fixed" ? "月額取り崩し" : "年間取り崩し率"}
-                                </div>
-                                <div className={`${typography.body} ${colors.textPrimary}`}>
-                                    {withdrawalType === "fixed"
-                                        ? formatYen(parseFloat(withdrawalAmount) || 0, 2)
-                                        : formatPercentage(parseFloat(withdrawalRate) || 0, 2)}
-                                </div>
-                            </div>
-                            {(() => {
-                                const zeroIndex = results.findIndex(r => r.remainingBTC <= 0);
-                                const zeroYear = zeroIndex !== -1 ? results[zeroIndex].year : null;
-                                return (
-                                    <div className="bg-gray-700 p-3 rounded-md">
-                                        <div className={`${typography.small} ${colors.textMuted}`}>資金寿命</div>
-                                        <div className={`${typography.body} ${colors.textPrimary}`}>
-                                            {zeroYear
-                                                ? `${zeroYear}年（${zeroYear - parseInt(startYear)}年間）`
-                                                : "2050年以降も維持"}
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                            <div className="bg-gray-700 p-3 rounded-md">
-                                <div className={`${typography.small} ${colors.textMuted}`}>5年後の資産評価額</div>
-                                <div className={`${typography.body} ${colors.textPrimary}`}>
-                                    {formatYen(
-                                        results.find(r => r.year === CURRENT_YEAR + 5)?.totalValue || 0,
-                                        2
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                        <SimulationHighlights
+                            initialBTC={initialBTC}
+                            startYear={startYear}
+                            withdrawalType={withdrawalType}
+                            withdrawalAmount={withdrawalAmount}
+                            withdrawalRate={withdrawalRate}
+                            results={results}
+                        />
 
-                        <div className={`hidden md:block ${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
-                            <div className="flex justify-between mb-4">
-                                <h3 className={`${typography.h3} ${colors.textPrimary}`}>シミュレーション結果</h3>
-                            </div>
-                            <div className="overflow-x-auto -mx-6 px-6">
-                                <table className="min-w-full divide-y divide-gray-700">
-                                    <thead className="bg-gray-700">
-                                        <tr>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年</th>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC価格</th>
-                                            {showSecondPhase && (
-                                                <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>段階</th>
-                                            )}
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し率</th>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し額</th>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩しBTC</th>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>残り保有BTC</th>
-                                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>資産評価額</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-700">
-                                        {results.map((result) => (
-                                            <tr key={result.year} className={result.year % 2 === 0 ? "bg-gray-800" : "bg-gray-750 hover:bg-gray-700 transition-colors duration-200"}>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.year}</td>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatYen(result.btcPrice, 2)}</td>
-                                                {showSecondPhase && (
-                                                    <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.phase}</td>
-                                                )}
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                                    {typeof result.withdrawalRate === 'number' ? formatPercentage(result.withdrawalRate, 2) : result.withdrawalRate}
-                                                </td>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                                    {typeof result.withdrawalAmount === 'number' ? formatYen(result.withdrawalAmount, 2) : result.withdrawalAmount}
-                                                </td>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                                    {typeof result.withdrawalBTC === 'number' ? formatBTC(result.withdrawalBTC, 4) : result.withdrawalBTC}
-                                                </td>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatBTC(result.remainingBTC, 4)}</td>
-                                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatYen(result.totalValue, 2)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <SimulationResultsTable
+                            results={results}
+                            showSecondPhase={showSecondPhase}
+                        />
                     </div>
                 )}
             </div>

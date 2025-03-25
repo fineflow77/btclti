@@ -16,7 +16,9 @@ export const log10 = (value: number): number => Math.log10(Math.max(0.0000001, v
 export const fromLog10 = (logValue: number): number => Math.pow(10, logValue);
 
 /**
- * 決定係数（R²）を計算
+ * 決定係数（R²）を計算（対数スケールを使用）
+ * ビットコインの価格はパワーローに従うと仮定し、対数スケールで線形回帰を行い、R²を計算する。
+ * 具体的には、x軸（日数）とy軸（価格）を対数変換し、その間の相関を測定する。
  * @param data - 価格データ配列 [[timestamp: number, price: number], ...]
  * @returns R²値（0〜1）、データがない場合はnull
  */
@@ -32,8 +34,8 @@ export const calculateRSquared = (data: [number, number][]): number | null => {
 
     for (const [timestamp, price] of data) {
         const days = getDaysSinceGenesis(new Date(timestamp));
-        const x = log10(Math.max(1, days));
-        const y = log10(Math.max(0.0000001, price));
+        const x = log10(Math.max(1, days)); // 対数スケールで日数を変換
+        const y = log10(Math.max(0.0000001, price)); // 対数スケールで価格を変換
 
         sumX += x;
         sumY += y;
@@ -45,15 +47,4 @@ export const calculateRSquared = (data: [number, number][]): number | null => {
     const numerator = n * sumXY - sumX * sumY;
     const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
     return denominator === 0 ? 0 : Math.pow(numerator / denominator, 2);
-};
-
-/**
- * パーセント形式でフォーマット
- * @param value - フォーマットする値
- * @param decimals - 小数点以下の桁数（デフォルト: 1）
- * @returns フォーマットされた文字列（例: "+12.3%"）
- */
-export const formatPercentage = (value: number | null, decimals: number = 1): string => {
-    if (value === null || isNaN(value)) return '-';
-    return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
 };

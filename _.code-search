@@ -1,0 +1,27 @@
+# Query: 研究所
+# ContextLines: 1
+
+5 results - 3 files
+
+src/App.tsx:
+  26    const shareUrl = window.location.href;
+  27:   const shareText = 'ビットコイン長期投資ラボで価格予測をチェック！';
+  28  
+
+  77            <p className="mt-2">
+  78:             © 2025 ビットコイン長期投資ラボ{' '}
+  79              <a href="https://x.com/DrPowerLaw" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0]">
+
+src/components/layout/Header.tsx:
+  67            className="flex items-center hover:opacity-90 transition-opacity duration-300"
+  68:           aria-label="ビットコイン長期投資ラボ - ホームページへ"
+  69          >
+
+  71              <span className="bg-gradient-to-r from-[#3B82F6] via-[#F59E0B] to-[#D4AF37] bg-clip-text text-transparent">
+  72:               ビットコイン長期投資ラボ
+  73              </span>
+
+src/pages/PowerLawExplanation.tsx:
+  283                      <p>
+  284:                         © {new Date().getFullYear()} ビットコイン長期投資ラボ{' '}
+  285                          <a

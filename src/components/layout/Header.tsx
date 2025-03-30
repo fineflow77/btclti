@@ -65,11 +65,11 @@ const Header: React.FC = () => {
         <NavLink
           to="/"
           className="flex items-center hover:opacity-90 transition-opacity duration-300"
-          aria-label="ビットコイン長期投資研究所 - ホームページへ"
+          aria-label="ビットコイン長期投資ラボ - ホームページへ"
         >
           <div className="text-2xl font-bold">
             <span className="bg-gradient-to-r from-[#3B82F6] via-[#F59E0B] to-[#D4AF37] bg-clip-text text-transparent">
-              ビットコイン長期投資研究所
+              ビットコイン長期投資ラボ
             </span>
           </div>
         </NavLink>

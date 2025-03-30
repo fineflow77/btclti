@@ -1,7 +1,6 @@
-// src/pages/BitcoinBasics.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Info, ArrowRight, Shield, TrendingUp, Wallet, Key } from 'lucide-react';
+import { Info, ArrowRight, Shield, TrendingUp, Key, PiggyBank } from 'lucide-react';
 
 const typography: Record<string, string> = {
     h1: 'text-2xl sm:text-3xl font-semibold tracking-tight',
@@ -19,170 +18,197 @@ const colors: Record<string, string> = {
     textPrimary: 'text-gray-100',
     textSecondary: 'text-gray-300',
     textMuted: 'text-gray-400',
+    accent: 'text-[#D4AF37]',
+    success: 'text-[#10B981]',
+    warning: 'text-[#F87171]',
 };
 
 const BitcoinBasics: React.FC = () => {
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
-            <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-                {/* イントロダクション */}
+            <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+                {/* Introduction */}
                 <div className="text-center">
-                    <h1 className={`${typography.h1} text-[#3B82F6] mb-4`}>ビットコイン投資の基礎</h1>
+                    <h1 className={`${typography.h1} text-[#3B82F6] mb-4`}>ビットコイン投資の第一歩</h1>
                     <p className={`${typography.body} ${colors.textSecondary}`}>
-                        ビットコイン投資を始める前に知っておきたい基本的な知識と実践的なステップをわかりやすく解説します。
+                        ビットコインに興味はあるけれど、どう始めればいいかわからない。そんなあなたのために、基本から実践までをわかりやすく解説します。
+                    </p>
+                    <p className={`${typography.body} ${colors.textSecondary}`}>
+                        30代のあなたにぴったりの、賢く始めるビットコイン投資の世界へようこそ。
                     </p>
                 </div>
 
-                {/* セクション1：ビットコインとは */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3 flex items-center`}>
-                        <Info className="h-5 w-5 mr-2 text-[#3B82F6]" />
-                        ビットコインとは
+                {/* Section 1: What is Bitcoin? */}
+                <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
+                    <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
+                        <Info className="h-5 w-5 mr-2" />
+                        ビットコインとは何か？
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        ビットコインは、中央銀行を介さずに取引できるデジタル通貨です。ブロックチェーン技術により、透明性と安全性が確保されています。
+                        ビットコインは、中央銀行や政府が介在しない分散型デジタル通貨です。インターネットを介して、世界中どこでも直接送金が可能。
+                    </p>
+                    <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
+                        発行上限が2100万BTCと決まっているため、希少性が高く、インフレに強い資産として注目されています。
                     </p>
                     <p className={`${typography.body} ${colors.textSecondary}`}>
-                        2009年に誕生して以来、ビットコインは長期的な成長を続けており、インフレヘッジや分散投資の手段として注目されています。
+                        2009年の誕生以来、価格は長期的に上昇傾向にあり、投資ポートフォリオの新たな選択肢として魅力的です。
                     </p>
-                    <div className="mt-4 text-right">
+                    <div className="mt-5 text-right">
                         <Link
                             to="/power-law-explanation"
                             className="text-[#3B82F6] hover:text-[#2b6cb0] text-sm font-medium inline-flex items-center group"
                         >
-                            ビットコインの長期成長パターンを知る{' '}
-                            <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">
-                                →
-                            </span>
+                            長期成長の秘密を知る{' '}
+                            <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">→</span>
                         </Link>
                     </div>
                 </div>
 
-                {/* セクション2：メリットとリスク */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3 flex items-center`}>
-                        <TrendingUp className="h-5 w-5 mr-2 text-[#3B82F6]" />
-                        ビットコイン投資のメリットとリスク
+                {/* Section 2: Benefits and Risks */}
+                <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
+                    <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
+                        <TrendingUp className="h-5 w-5 mr-2" />
+                        投資のメリットとリスク
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-                            <h3 className={`${typography.subtitle} text-[#10B981]`}>メリット</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.success} mb-2 flex items-center`}>
+                                <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] mr-2" /> メリット
+                            </h3>
                             <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
-                                <li>長期的な価格成長（過去10年で大幅な上昇）</li>
-                                <li>インフレヘッジとしての価値</li>
-                                <li>分散投資の一環として活用可能</li>
+                                <li><strong className="font-semibold">成長性:</strong> 過去10年で急上昇し、将来への期待も高い。</li>
+                                <li><strong className="font-semibold">インフレ対策:</strong> 発行上限により法定通貨の価値下落に強い。</li>
+                                <li><strong className="font-semibold">分散投資:</strong> 株式や債券と異なる動きでリスクを分散。</li>
+                                <li><strong className="font-semibold">少額投資:</strong> 1円からでも始められ、気軽に参入可能。</li>
                             </ul>
                         </div>
-                        <div className="space-y-2 p-3 bg-gray-800 bg-opacity-50 rounded-lg">
-                            <h3 className={`${typography.subtitle} text-[#F87171]`}>リスク</h3>
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.warning} mb-2 flex items-center`}>
+                                <span className="inline-block w-2 h-2 rounded-full bg-[#F87171] mr-2" /> リスク
+                            </h3>
                             <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
-                                <li>価格の高いボラティリティ</li>
-                                <li>規制リスク（政府の規制変更）</li>
-                                <li>セキュリティリスク（ハッキングなど）</li>
+                                <li><strong className="font-semibold">ボラティリティ:</strong> 価格変動が大きく、短期間での損失リスクも。</li>
+                                <li><strong className="font-semibold">規制:</strong> 政府の規制変更で価格や取引が影響を受ける可能性。</li>
+                                <li><strong className="font-semibold">セキュリティ:</strong> ハッキングリスクがあり、自己管理が重要。</li>
+                                <li><strong className="font-semibold">税金:</strong> 利益は課税対象で、確定申告が必要な場合も。</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                {/* セクション3：準備 */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3 flex items-center`}>
-                        <Shield className="h-5 w-5 mr-2 text-[#3B82F6]" />
-                        準備
+                {/* Section 3: Preparation */}
+                <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
+                    <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
+                        <Shield className="h-5 w-5 mr-2" />
+                        投資を始める準備
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        ビットコイン投資を始める前に、以下の準備を整えましょう。
+                        ビットコイン投資を安全に始めるには、いくつかのステップが必要です。
                     </p>
-                    <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside space-y-2`}>
-                        <li>ウォレット：ビットコインを保管するためのデジタル財布が必要です（例：MetaMask、Ledger）。</li>
-                        <li>取引所アカウント：信頼できる取引所でアカウントを作成します（例：Coinbase、Binance）。</li>
-                        <li>セキュリティ対策：2段階認証を設定し、秘密鍵を安全に管理しましょう。</li>
-                    </ul>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.textPrimary} mb-2`}>取引所アカウントの開設</h3>
+                            <p className={`${typography.body} ${colors.textSecondary} mb-2`}>
+                                まずは金融庁登録済みの国内取引所でアカウントを作成しましょう。本人確認書類とマイナンバーが必要です。
+                            </p>
+                            <p className={`${typography.body} ${colors.textSecondary} mb-2`}>おすすめ取引所:</p>
+                            <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
+                                <li>
+                                    <Link to="https://coin.z.com/jp/" target="_blank" className="text-[#3B82F6] hover:text-[#2b6cb0] inline-flex items-center group">
+                                        <strong className="font-semibold">GMOコイン</strong>
+                                        <ArrowRight className="ml-1 h-4 w-4" />
+                                    </Link>: 手数料が安く、積み立てサービスも充実。
+                                </li>
+                                <li>
+                                    <Link to="https://bitbank.cc/" target="_blank" className="text-[#3B82F6] hover:text-[#2b6cb0] inline-flex items-center group">
+                                        <strong className="font-semibold">bitbank</strong>
+                                        <ArrowRight className="ml-1 h-4 w-4" />
+                                    </Link>: 取引量が多く、本格的な取引に最適。
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.textPrimary} mb-2`}>ウォレットの理解</h3>
+                            <p className={`${typography.body} ${colors.textSecondary} mb-2`}>
+                                取引所でビットコインを買ったら、それを保管する「ウォレット」があります。取引所提供のものを使うのが初心者には簡単ですが、自己管理型（例: Ledger）はセキュリティが高い選択肢です。
+                            </p>
+                            <p className={`${typography.body} ${colors.textMuted}`}>
+                                まずは取引所のウォレットから始めて、慣れてきたら自己管理を検討しましょう。
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.textPrimary} mb-2`}>セキュリティ対策</h3>
+                            <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
+                                <li><strong className="font-semibold">2FA:</strong> 二段階認証でログインを保護。</li>
+                                <li><strong className="font-semibold">パスワード:</strong> 複雑で推測されにくいものを。</li>
+                                <li><strong className="font-semibold">フィッシング対策:</strong> 公式サイト以外からのアクセスを避ける。</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                {/* セクション4：取引所の選び方 */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3 flex items-center`}>
-                        <Wallet className="h-5 w-5 mr-2 text-[#3B82F6]" />
-                        取引所の選び方
+                {/* Section 4: Accumulation Services */}
+                <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
+                    <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
+                        <PiggyBank className="h-5 w-5 mr-2" />
+                        積み立て投資の活用
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        以下のポイントを参考に、信頼できる取引所を選びましょう。
+                        初心者におすすめなのが、取引所の積み立てサービス。毎月一定額を自動購入し、手間なく長期投資が可能です。
                     </p>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className={`${typography.subtitle} ${colors.textPrimary} border-b border-gray-700`}>
-                                <th className="py-2">取引所</th>
-                                <th className="py-2">手数料</th>
-                                <th className="py-2">特徴</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr className={`${typography.body} ${colors.textSecondary} border-b border-gray-700`}>
-                                <td className="py-2">Coinbase</td>
-                                <td className="py-2">1.5%</td>
-                                <td className="py-2">初心者向け、使いやすい</td>
-                            </tr>
-                            <tr className={`${typography.body} ${colors.textSecondary} border-b border-gray-700`}>
-                                <td className="py-2">Binance</td>
-                                <td className="py-2">0.1%</td>
-                                <td className="py-2">低手数料、豊富な機能</td>
-                            </tr>
-                            <tr className={`${typography.body} ${colors.textSecondary}`}>
-                                <td className="py-2">Kraken</td>
-                                <td className="py-2">0.2%</td>
-                                <td className="py-2">高い安全性、日本語対応</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.success} mb-2 flex items-center`}>
+                                <span className="inline-block w-2 h-2 rounded-full bg-[#10B981] mr-2" /> メリット
+                            </h3>
+                            <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
+                                <li><strong className="font-semibold">ドルコスト平均法:</strong> 価格変動リスクを抑え、安定投資。</li>
+                                <li><strong className="font-semibold">手軽さ:</strong> 設定後は自動で積み立て。</li>
+                                <li><strong className="font-semibold">長期視点:</strong> 短期変動に惑わされない戦略。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className={`${typography.subtitle} ${colors.warning} mb-2 flex items-center`}>
+                                <span className="inline-block w-2 h-2 rounded-full bg-[#F87171] mr-2" /> 注意点
+                            </h3>
+                            <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside`}>
+                                <li><strong className="font-semibold">手数料:</strong> 取引所よりやや高めの場合も。</li>
+                                <li><strong className="font-semibold">短期利益:</strong> 急騰時の利益は限定的。</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                {/* セクション5：少額投資から始める */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3 flex items-center`}>
-                        <Key className="h-5 w-5 mr-2 text-[#3B82F6]" />
-                        少額投資から始める
+                {/* Section 5: Starting Small */}
+                <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
+                    <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
+                        <Key className="h-5 w-5 mr-2" />
+                        少額から始める
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        リスクを抑えるために、少額（例：1,000円分）から投資を始めましょう。
+                        リスクを抑えるなら、月5,000円や毎日500円といった少額から。積み立てサービスで手軽に始め、自分のペースで増やしていきましょう。
                     </p>
-                    <ol className={`${typography.body} ${colors.textSecondary} list-decimal list-inside space-y-2`}>
-                        <li>取引所にログインし、ビットコインの購入画面に進む。</li>
-                        <li>購入金額（例：1,000円）を入力し、購入手続きを完了する。</li>
-                        <li>購入したビットコインをウォレットに移動して安全に保管する。</li>
-                    </ol>
-                </div>
-
-                {/* セクション6：次のステップ */}
-                <div className={`${colors.cardBg} p-5 rounded-2xl shadow-md ${colors.cardBorder}`}>
-                    <h2 className={`${typography.h2} text-[#3B82F6] mb-3`}>次のステップ</h2>
-                    <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        投資を始めたら、以下のステップでさらに学びを深めましょう。
-                    </p>
-                    <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside space-y-2`}>
-                        <li>シミュレーターを使って、長期的な投資戦略を試してみる。</li>
-                        <li>価格の短期変動に惑わされず、長期的な視点を持つ。</li>
-                    </ul>
-                    <div className="mt-4 text-right">
+                    <div className="mt-5 text-right">
                         <Link
                             to="/simulators/investment"
                             className="text-[#3B82F6] hover:text-[#2b6cb0] text-sm font-medium inline-flex items-center group"
                         >
-                            シミュレーションで投資戦略を試す{' '}
-                            <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">
-                                →
-                            </span>
+                            シミュレーションを試す{' '}
+                            <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">→</span>
                         </Link>
                     </div>
                 </div>
 
-                {/* CTA：シミュレーターへの導線 */}
-                <div className="text-center">
+                {/* CTA */}
+                <div className="text-center mt-10">
+                    <p className={`${typography.body} ${colors.textSecondary} mb-4`}>
+                        賢くビットコイン投資を始めましょう。
+                    </p>
                     <Link
                         to="/simulators/investment"
                         className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
                     >
-                        シミュレーションで投資を試してみる
+                        積み立てシミュレーションを試す
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </div>

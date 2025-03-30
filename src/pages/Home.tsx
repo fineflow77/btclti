@@ -309,7 +309,7 @@ const Home: React.FC = () => {
             to="/analysis-news"
             className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
           >
-            最新の価格分析とニュースを見る
+            最新の価格分析を見る
             <Info className="ml-2 h-4 w-4" />
           </Link>
         </div>

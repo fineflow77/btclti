@@ -39,16 +39,6 @@ const Header: React.FC = () => {
   const navItems: NavItem[] = [
     {
       to: '#',
-      label: '学ぶ',
-      icon: <Info className="h-4 w-4 mr-2" />,
-      children: [
-        { to: '/bitcoin-basics', label: 'ビットコイン投資の基礎', icon: <Info className="h-4 w-4 mr-2" /> },
-        { to: '/power-law-explanation', label: 'パワーロー解説', icon: <Info className="h-4 w-4 mr-2" /> },
-        { to: '/analysis-news', label: 'ニュース', icon: <Newspaper className="h-4 w-4 mr-2" /> },
-      ],
-    },
-    {
-      to: '#',
       label: 'シミュレーター',
       icon: <BarChart2 className="h-4 w-4 mr-2" />,
       children: [
@@ -56,6 +46,17 @@ const Header: React.FC = () => {
         { to: '/simulators/withdrawal', label: '取り崩しシミュレーター', icon: <Wallet className="h-4 w-4 mr-2" /> },
       ],
     },
+    {
+      to: '#',
+      label: '学ぶ',
+      icon: <Info className="h-4 w-4 mr-2" />,
+      children: [
+        { to: '/bitcoin-basics', label: 'ビットコイン投資の基礎', icon: <Info className="h-4 w-4 mr-2" /> },
+        { to: '/power-law-explanation', label: 'パワーロー解説', icon: <Info className="h-4 w-4 mr-2" /> },
+        { to: '/analysis-news', label: '価格分析', icon: <Newspaper className="h-4 w-4 mr-2" /> },
+      ],
+    },
+
   ];
 
   return (

@@ -10,6 +10,8 @@ export default defineConfig({
       jsxRuntime: 'automatic',
     }),
   ],
+  // ベースパスを相対パスに設定
+  base: './',
   server: {
     port: 5173,
     host: '127.0.0.1',
@@ -32,6 +34,9 @@ export default defineConfig({
     },
   },
   build: {
+    // 出力ディレクトリを指定（Vercelの設定と一致させる）
+    outDir: 'dist',
+    // SPAのためのヒストリーAPIフォールバック
     rollupOptions: {
       output: {
         manualChunks: {
@@ -40,6 +45,13 @@ export default defineConfig({
           'utils': ['date-fns', 'lucide-react', 'phosphor-react'],
         },
       },
+    },
+  },
+  // 開発サーバーでのヒストリーフォールバック
+  // これはビルド時には影響しませんが、開発時に役立ちます
+  resolve: {
+    alias: {
+      '@': '/src',
     },
   },
 });

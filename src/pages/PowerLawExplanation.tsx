@@ -39,7 +39,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                 {/* Header and other sections remain the same as the previous revision */}
                 <header className="mb-12 text-center">
                     <h1 className={`${typography.h1} ${colors.info} mb-4`}>
-                        ビットコイン価格の長期的傾向：パワーロー（べき乗則）モデルによる分析
+                        ビットコイン価格の長期的傾向：パワーローモデルによる分析
                     </h1>
                     <p className={`${typography.body} ${colors.textSecondary}`}>
                         複雑に見えるビットコインの価格変動の背後にある、長期的な成長パターンを捉える「パワーローモデル」について解説します。
@@ -138,7 +138,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                             {/* 上限線に関する言及を削除 */}
                         </p>
                         <p>
-                            対数スケールを用いることで、価格の絶対額ではなく「変化率」に着目しやすくなり、指数関数的な成長も直線的なトレンドとして捉えることができます。これにより、長期的な価格動向のパターン分析が可能になります。
+                            対数スケールを用いることで、価格の絶対額ではなく「変化率」に着目しやすくなり、指数関数的な成長も明確なトレンドとして捉えることができます。これにより、長期的な価格動向のパターン分析が可能になります。
                         </p>
                         <p>
                             このチャートにおける各ラインやラベルの一般的な解釈は以下の通りです。

@@ -1,7 +1,7 @@
 // src/main.tsx
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom'; // BrowserRouter から HashRouter に変更
 import App from './App.tsx';
 import './index.css';
 
@@ -19,8 +19,8 @@ const root = createRoot(rootElement);
 // レンダリング処理
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <HashRouter> {/* BrowserRouter から HashRouter に変更 */}
       <App />
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>
 );

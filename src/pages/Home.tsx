@@ -295,7 +295,7 @@ const Home: React.FC = () => {
               <p className={`${typography.body} ${colors.textSecondary}`}>
                 資産を取り崩しながら運用した場合のシミュレーションができます。
               </p>
-            </div>
+            </div>np
             <ArrowUpRight className="h-6 w-6 text-white" />
           </Link>
         </div>

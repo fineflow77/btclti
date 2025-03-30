@@ -160,7 +160,7 @@ const Home: React.FC = () => {
                     </div>
                     {medianDeviation !== null && (
                       <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                        現在価格は中央価格より {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}% 乖離
+                        現在価格は、この価格より {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}% 乖離
                       </div>
                     )}
                   </div>
@@ -307,9 +307,9 @@ const Home: React.FC = () => {
         <div className="text-center">
           <Link
             to="/analysis-news"
-            className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
+            className={`bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors text-white`}
           >
-            最新の価格分析を見る
+            詳細な価格分析を見る
             <Info className="ml-2 h-4 w-4" />
           </Link>
         </div>

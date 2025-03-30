@@ -11,7 +11,7 @@ import DataContainer from '../components/ui/DataContainer';
 import { ChartLineUp, Wallet as PhosphorWallet } from 'phosphor-react';
 import { BitcoinData, PowerLawDataPoint, WeeklyPrice, DailyPrice } from '../types';
 
-// タイポグラフィの定義
+// タイポグラフィと色の定義は変更なし
 const typography: Record<string, string> = {
   h1: 'text-2xl sm:text-3xl font-semibold tracking-tight',
   h2: 'text-xl sm:text-2xl font-medium',
@@ -21,7 +21,6 @@ const typography: Record<string, string> = {
   small: 'text-xs sm:text-sm font-normal',
 };
 
-// 色の定義
 const colors: Record<string, string> = {
   primary: 'bg-[#3B82F6] hover:bg-[#2b6cb0] text-white',
   cardBg: 'bg-gray-800',
@@ -44,6 +43,7 @@ const Home: React.FC = () => {
   const [rSquared, setRSquared] = useState<number>(0.9703);
   const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('log');
 
+  // useEffect, useMemo フックは変更なし
   useEffect(() => {
     if (weeklyPrices && weeklyPrices.length > 0) {
       const calculatedRSquared = calculateRSquared(
@@ -92,122 +92,130 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
+      {/* space-y-12 で各セクションの間隔を設定 */}
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        {/* 価格カード */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* 現在価格カード */}
-          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-            <h3 className={`${typography.subtitle} ${colors.amber} mb-3 flex items-center`}>
-              <TrendingUp className="h-5 w-5 mr-2" /> 現在価格
-            </h3>
-            <DataContainer
-              isLoading={loading}
-              error={error}
-              loadingMessage="価格データ取得中..."
-              noDataMessage="価格データが利用できません"
-            >
-              {currentPrice && currentPrice.prices.usd ? (
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-[#D4AF37]">
-                    {formatCurrency(currentPrice.prices.jpy, 'JPY')}
-                  </div>
-                  <div className={`${typography.tiny} ${colors.textMuted}`}>
-                    ({formatCurrency(currentPrice.prices.usd, 'USD')})
-                  </div>
-                  {priceChangePercentage !== null && (
-                    <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                      前日比: {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(2)}%
+
+        {/* --- 価格情報セクション ここから --- */}
+        <div className="space-y-6"> {/* カードグリッドと為替情報の間隔 */}
+          {/* 価格カードグリッド */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* 現在価格カード */}
+            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <h3 className={`${typography.subtitle} ${colors.amber} mb-3 flex items-center`}>
+                <TrendingUp className="h-5 w-5 mr-2" /> 現在価格
+              </h3>
+              <DataContainer
+                isLoading={loading}
+                error={error}
+                loadingMessage="価格データ取得中..."
+                noDataMessage="価格データが利用できません"
+              >
+                {currentPrice && currentPrice.prices.usd ? (
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-[#D4AF37]">
+                      {formatCurrency(currentPrice.prices.jpy, 'JPY')}
                     </div>
-                  )}
-                  {medianDeviation !== null && (
-                    <div className="mt-2">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-medium bg-opacity-20 hover:bg-[#b8972f]/20 hover:text-[#b8972f] transition-all duration-300`}
-                        style={{
-                          backgroundColor: `${getPowerLawPositionColor(medianDeviation, supportDeviation)}20`,
-                          color: getPowerLawPositionColor(medianDeviation, supportDeviation),
-                        }}
-                      >
-                        {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
-                      </span>
+                    <div className={`${typography.tiny} ${colors.textMuted}`}>
+                      ({formatCurrency(currentPrice.prices.usd, 'USD')})
                     </div>
-                  )}
-                </div>
-              ) : null}
-            </DataContainer>
+                    {priceChangePercentage !== null && (
+                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
+                        前日比: {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(2)}%
+                      </div>
+                    )}
+                    {medianDeviation !== null && (
+                      <div className="mt-2">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium bg-opacity-20 hover:bg-[#b8972f]/20 hover:text-[#b8972f] transition-all duration-300`}
+                          style={{
+                            backgroundColor: `${getPowerLawPositionColor(medianDeviation, supportDeviation)}20`,
+                            color: getPowerLawPositionColor(medianDeviation, supportDeviation),
+                          }}
+                        >
+                          {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </DataContainer>
+            </div>
+
+            {/* 中央価格カード */}
+            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <h3 className={`${typography.subtitle} ${colors.green} mb-3`}>本日のパワーロー 中央価格</h3>
+              <DataContainer
+                isLoading={loading}
+                error={error}
+                loadingMessage="価格データ取得中..."
+                noDataMessage="中央価格データが利用できません"
+              >
+                {powerLawData && powerLawData.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="text-2xl font-semibold text-[#10B981]">
+                      {formatCurrency(medianPrice * exchangeRate, 'JPY')}
+                    </div>
+                    <div className={`${typography.tiny} ${colors.textMuted}`}>
+                      ({formatCurrency(medianPrice, 'USD')})
+                    </div>
+                    {medianDeviation !== null && (
+                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
+                        現在価格は中央価格より {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}% 乖離
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </DataContainer>
+            </div>
+
+            {/* 下限価格カード */}
+            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <h3 className={`${typography.subtitle} ${colors.pink} mb-3`}>本日のパワーロー 下限価格</h3>
+              <DataContainer
+                isLoading={loading}
+                error={error}
+                loadingMessage="価格データ取得中..."
+                noDataMessage="下限価格データが利用できません"
+              >
+                {powerLawData && powerLawData.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="text-2xl font-semibold text-[#FF69B4]">
+                      {formatCurrency(supportPrice * exchangeRate, 'JPY')}
+                    </div>
+                    <div className={`${typography.tiny} ${colors.textMuted}`}>
+                      ({formatCurrency(supportPrice, 'USD')})
+                    </div>
+                    {supportDeviation !== null && (
+                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
+                        現在価格は、この価格より {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}% 乖離
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </DataContainer>
+            </div>
           </div>
 
-          {/* 中央価格カード */}
-          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-            <h3 className={`${typography.subtitle} ${colors.green} mb-3`}>本日のパワーロー 中央価格</h3>
-            <DataContainer
-              isLoading={loading}
-              error={error}
-              loadingMessage="価格データ取得中..."
-              noDataMessage="中央価格データが利用できません"
-            >
-              {powerLawData && powerLawData.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-[#10B981]">
-                    {formatCurrency(medianPrice * exchangeRate, 'JPY')}
-                  </div>
-                  <div className={`${typography.tiny} ${colors.textMuted}`}>
-                    ({formatCurrency(medianPrice, 'USD')})
-                  </div>
-                  {medianDeviation !== null && (
-                    <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                      現在価格は中央価格より {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}% 乖離
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </DataContainer>
-          </div>
-
-          {/* 下限価格カード */}
-          <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-            <h3 className={`${typography.subtitle} ${colors.pink} mb-3`}>本日のパワーロー 下限価格</h3>
-            <DataContainer
-              isLoading={loading}
-              error={error}
-              loadingMessage="価格データ取得中..."
-              noDataMessage="下限価格データが利用できません"
-            >
-              {powerLawData && powerLawData.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-[#FF69B4]">
-                    {formatCurrency(supportPrice * exchangeRate, 'JPY')}
-                  </div>
-                  <div className={`${typography.tiny} ${colors.textMuted}`}>
-                    ({formatCurrency(supportPrice, 'USD')})
-                  </div>
-                  {supportDeviation !== null && (
-                    <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                      現在価格は、この価格より {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}% 乖離
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </DataContainer>
+          {/* 為替レートと最終更新 */}
+          <div className="flex justify-between items-center bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 shadow-md">
+            <div className={`${typography.small} ${colors.textMuted}`}>
+              為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
+            </div>
+            <div className={`${typography.small} ${colors.textMuted}`}>
+              {currentPrice && (
+                <span>
+                  最終更新: {new Date(currentPrice.timestamp).toLocaleString('ja-JP', { timeStyle: 'short' })}
+                </span>
+              )}
+            </div>
           </div>
         </div>
+        {/* --- 価格情報セクション ここまで --- */}
 
-        {/* 為替レートと最終更新 */}
-        <div className="flex justify-between items-center bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 shadow-md">
-          <div className={`${typography.small} ${colors.textMuted}`}>
-            為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
-          </div>
-          <div className={`${typography.small} ${colors.textMuted}`}>
-            {currentPrice && (
-              <span>
-                最終更新: {new Date(currentPrice.timestamp).toLocaleString('ja-JP', { timeStyle: 'short' })}
-              </span>
-            )}
-          </div>
-        </div>
 
-        {/* メイン：タブ付きパワーローチャート */}
-        <div className="mt-12">
+        {/* --- メイン：タブ付きパワーローチャート ここから --- */}
+        {/* mt-12 は削除 (親の space-y-12 が適用される) */}
+        <div>
           <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-6`}>長期パワーローチャート</h1>
           <div className="flex justify-center mb-6 space-x-4">
             <button
@@ -254,9 +262,12 @@ const Home: React.FC = () => {
             </Link>
           </div>
         </div>
+        {/* --- メイン：タブ付きパワーローチャート ここまで --- */}
 
-        {/* シミュレーターへの導線 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+
+        {/* --- シミュレーターへの導線 ここから --- */}
+        {/* mt-12 は削除 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
             to="/simulators/investment"
             className={`${colors.investmentCardBg} p-6 rounded-2xl shadow-lg flex items-center justify-between transition-transform duration-300 hover:scale-105 hover:shadow-xl ${colors.cardBorderHighlight}`}
@@ -288,9 +299,12 @@ const Home: React.FC = () => {
             <ArrowUpRight className="h-6 w-6 text-white" />
           </Link>
         </div>
+        {/* --- シミュレーターへの導線 ここまで --- */}
 
-        {/* ニュースと分析への導線 */}
-        <div className="text-center mt-12">
+
+        {/* --- ニュースと分析への導線 ここから --- */}
+        {/* mt-12 は削除 */}
+        <div className="text-center">
           <Link
             to="/analysis-news"
             className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
@@ -299,6 +313,8 @@ const Home: React.FC = () => {
             <Info className="ml-2 h-4 w-4" />
           </Link>
         </div>
+        {/* --- ニュースと分析への導線 ここまで --- */}
+
       </div>
     </div>
   );

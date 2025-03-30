@@ -41,7 +41,28 @@ function getZScoreInterpretation(z: number | null): string {
     return '標準的';
 };
 
+// 指標ラベルコンポーネント
+const MetricLabel: React.FC<{ label: string, explanation: string }> = ({ label, explanation }) => {
+    return (
+        <div className="flex flex-col">
+            <span className={`${bodyClass} ${textSecondaryClass}`}>{label}:</span>
+            <span className={`${smallClass} ${textMutedClass} mt-0.5`}>{explanation}</span>
+        </div>
+    );
+};
+
 const AnalysisNews: React.FC = () => {
+    // 説明テキストを追加
+    const explanations = {
+        volatility: "過去30日間の日次対数収益率の標準偏差(年率)",
+        drawdown: "記録されている最高値からの現在価格の下落率",
+        zScore: "中央乖離率の統計的位置(標準偏差単位)",
+        rSquared: "パワーローモデルへの価格データの適合度",
+        prediction1y: "モデルによる1年後の予測価格(中央値/下限値)",
+        prediction3y: "モデルによる3年後の予測価格(中央値/下限値)",
+        prediction10y: "モデルによる10年後の予測価格(中央値/下限値)"
+    };
+
     // ★ 使われていない weeklyPrices, dailyPowerLawData, dataSources を削除 (必要に応じて戻す)
     const {
         loading, error, currentPrice, dailyPrices,
@@ -155,7 +176,7 @@ const AnalysisNews: React.FC = () => {
                             </div>
                             {/* パワーロー評価 */}
                             <div className="flex items-center space-x-2">
-                                <BarChartHorizontal className={`h-5 w-5 w-6 ${textSecondaryClass}`} /> {/* ★ アイコンを使用 */}
+                                <BarChartHorizontal className={`h-5 w-6 ${textSecondaryClass}`} />
                                 <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>評価:</span>
                                 {(medianDeviation !== null && supportDeviation !== null) ? (
                                     <span className={`${bodyClass} font-semibold px-2 py-0.5 rounded`} style={{ backgroundColor: getPowerLawPositionColor(medianDeviation, supportDeviation), color: '#fff' }}>
@@ -181,36 +202,87 @@ const AnalysisNews: React.FC = () => {
 
                 {/* --- リスク & 統計指標カード --- */}
                 <section aria-labelledby="risk-stats-heading" className={cardBaseClass}>
-                    <h2 id="risk-stats-heading" className={h2Class}> <Activity className="h-5 w-5 mr-2" /> リスク & 統計指標 </h2> {/* ★ Activity アイコンを使用 */}
+                    <h2 id="risk-stats-heading" className={h2Class}> <Activity className="h-5 w-5 mr-2" /> リスク & 統計指標 </h2>
                     <DataContainer isLoading={loading} error={error} loadingMessage="指標計算中...">
-                        <div className={gridClass}>
+                        <div className="grid grid-cols-1 gap-y-5">
                             {/* ボラティリティ */}
-                            <div className="flex items-center space-x-2" title="過去30日間の日次対数収益率の標準偏差（年率換算）">
-                                <BarChart2 className={`h-5 w-5 w-6 ${textSecondaryClass}`} /> {/* ★ アイコンを使用 */}
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[110px]`}>ボラティリティ:</span>
-                                {volatility30d !== null ? (<span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>{volatility30d.toFixed(1)}%</span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                                <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                                <div className="flex items-center">
+                                    <BarChart2 className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
+                                    <MetricLabel
+                                        label="ボラティリティ"
+                                        explanation={explanations.volatility}
+                                    />
+                                </div>
+                                <div className="ml-8 sm:ml-auto">
+                                    {volatility30d !== null ? (
+                                        <span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>
+                                            {volatility30d.toFixed(1)}%
+                                        </span>
+                                    ) : (
+                                        <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                    )}
+                                </div>
                             </div>
                             {/* ドローダウン */}
-                            <div className="flex items-center space-x-2" title="記録されている最高値からの現在価格の下落率">
-                                <TrendingDown className={`h-5 w-5 w-6 ${textSecondaryClass}`} /> {/* ★ アイコンを使用 */}
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[110px]`}>下落率(ATH):</span>
-                                {drawdown !== null ? (<span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>{drawdown.toFixed(1)}%</span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                                <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                                <div className="flex items-center">
+                                    <TrendingDown className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
+                                    <MetricLabel
+                                        label="下落率(ATH)"
+                                        explanation={explanations.drawdown}
+                                    />
+                                </div>
+                                <div className="ml-8 sm:ml-auto">
+                                    {drawdown !== null ? (
+                                        <span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>
+                                            {drawdown.toFixed(1)}%
+                                        </span>
+                                    ) : (
+                                        <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                    )}
+                                </div>
                             </div>
                             {/* 乖離Zスコア */}
-                            <div className="flex items-center space-x-2" title="中央価格からの乖離率が、過去の乖離率分布の中でどの位置にあるか（標準偏差単位）">
-                                <Percent className={`h-5 w-5 w-6 ${textSecondaryClass}`} /> {/* ★ アイコンを使用 */}
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[110px]`}>乖離Zスコア:</span>
-                                {medianDeviationZScore !== null ? (<span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>{medianDeviationZScore.toFixed(2)} <span className={`${smallClass} ${textMutedClass}`}>({getZScoreInterpretation(medianDeviationZScore)})</span></span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                                <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                                <div className="flex items-center">
+                                    <Percent className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
+                                    <MetricLabel
+                                        label="乖離Zスコア"
+                                        explanation={explanations.zScore}
+                                    />
+                                </div>
+                                <div className="ml-8 sm:ml-auto">
+                                    {medianDeviationZScore !== null ? (
+                                        <span className={`${bodyClass} ${textPrimaryClass} font-semibold`}>
+                                            {medianDeviationZScore.toFixed(2)}
+                                            <span className={`${smallClass} ${textMutedClass} ml-1`}>
+                                                ({getZScoreInterpretation(medianDeviationZScore)})
+                                            </span>
+                                        </span>
+                                    ) : (
+                                        <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                    )}
+                                </div>
                             </div>
                             {/* モデル適合度 R2 */}
-                            <div className="flex items-center space-x-2" title="パワーローモデルへの価格データの適合度 (対数スケール)">
-                                <Target className={`h-5 w-5 w-6 ${textSecondaryClass}`} /> {/* ★ アイコンを使用 */}
-                                <span className={`${smallClass} ${textSecondaryClass} min-w-[110px]`}>モデル適合度(R²):</span>
-                                {rSquared !== null ? (<span className={`${smallClass} ${textPrimaryClass} font-semibold`}>{rSquared.toFixed(4)}</span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                                <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                                <div className="flex items-center">
+                                    <Target className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
+                                    <MetricLabel
+                                        label="モデル適合度(R²)"
+                                        explanation={explanations.rSquared}
+                                    />
+                                </div>
+                                <div className="ml-8 sm:ml-auto">
+                                    {rSquared !== null ? (
+                                        <span className={`${smallClass} ${textPrimaryClass} font-semibold`}>
+                                            {rSquared.toFixed(4)}
+                                        </span>
+                                    ) : (
+                                        <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </DataContainer>
@@ -238,46 +310,93 @@ const AnalysisNews: React.FC = () => {
                 </section>
                 */}
 
-                {/* --- 将来予測 & 関連情報 --- */}
+                {/* --- 将来予測 --- */}
                 <section aria-labelledby="forecast-info-heading" className={cardBaseClass}>
-                    <h2 id="forecast-info-heading" className={h2Class}> <Calendar className="h-5 w-5 mr-2" /> 将来予測 & 関連情報 </h2> {/* ★ Calendar アイコンを使用 */}
-                    <div className="space-y-4">
+                    <h2 id="forecast-info-heading" className={h2Class}> <Calendar className="h-5 w-5 mr-2" /> 将来予測 & 関連情報 </h2>
+                    <div className="space-y-5">
                         {/* 1年後予測 */}
-                        <div className="flex items-center space-x-2" title="パワーローモデルに基づく1年後の理論価格予測（中央値/下限値）">
-                            <span className={`w-6 text-center ${textSecondaryClass}`}>🔮</span>
-                            <span className={`${bodyClass} ${textSecondaryClass} min-w-[120px]`}>1年後予測(モデル):</span>
-                            {prediction1y !== null ? (
-                                <span className={`${smallClass} ${textPrimaryClass}`}>
-                                    {formatCurrency(prediction1y.median.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction1y.median.usd, 'USD')})</span> / {formatCurrency(prediction1y.support.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction1y.support.usd, 'USD')})</span>
-                                </span>
-                            ) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                            <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                            <div className="flex items-center">
+                                <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>🔮</span>
+                                <MetricLabel
+                                    label="1年後予測(モデル)"
+                                    explanation={explanations.prediction1y}
+                                />
+                            </div>
+                            <div className="ml-8 sm:ml-auto">
+                                {prediction1y !== null ? (
+                                    <span className={`${smallClass} ${textPrimaryClass}`}>
+                                        {formatCurrency(prediction1y.median.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction1y.median.usd, 'USD')})
+                                        </span> /
+                                        {formatCurrency(prediction1y.support.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction1y.support.usd, 'USD')})
+                                        </span>
+                                    </span>
+                                ) : (
+                                    <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                )}
+                            </div>
                         </div>
                         {/* 3年後予測 */}
-                        <div className="flex items-center space-x-2" title="パワーローモデルに基づく3年後の理論価格予測（中央値/下限値）">
-                            <span className={`w-6 text-center ${textSecondaryClass}`}>✨</span>
-                            <span className={`${bodyClass} ${textSecondaryClass} min-w-[120px]`}>3年後予測(モデル):</span>
-                            {prediction3y !== null ? (
-                                <span className={`${smallClass} ${textPrimaryClass}`}>
-                                    {formatCurrency(prediction3y.median.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction3y.median.usd, 'USD')})</span> / {formatCurrency(prediction3y.support.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction3y.support.usd, 'USD')})</span>
-                                </span>
-                            ) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                            <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                            <div className="flex items-center">
+                                <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>✨</span>
+                                <MetricLabel
+                                    label="3年後予測(モデル)"
+                                    explanation={explanations.prediction3y}
+                                />
+                            </div>
+                            <div className="ml-8 sm:ml-auto">
+                                {prediction3y !== null ? (
+                                    <span className={`${smallClass} ${textPrimaryClass}`}>
+                                        {formatCurrency(prediction3y.median.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction3y.median.usd, 'USD')})
+                                        </span> /
+                                        {formatCurrency(prediction3y.support.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction3y.support.usd, 'USD')})
+                                        </span>
+                                    </span>
+                                ) : (
+                                    <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                )}
+                            </div>
                         </div>
                         {/* 10年後予測 */}
-                        <div className="flex items-center space-x-2" title="パワーローモデルに基づく10年後の理論価格予測（中央値/下限値）">
-                            <span className={`w-6 text-center ${textSecondaryClass}`}>🚀</span>
-                            <span className={`${bodyClass} ${textSecondaryClass} min-w-[120px]`}>10年後予測(モデル):</span>
-                            {prediction10y !== null ? (
-                                <span className={`${smallClass} ${textPrimaryClass}`}>
-                                    {formatCurrency(prediction10y.median.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction10y.median.usd, 'USD')})</span> / {formatCurrency(prediction10y.support.jpy, 'JPY')} <span className={`${smallClass} ${textMutedClass}`}>({formatCurrency(prediction10y.support.usd, 'USD')})</span>
-                                </span>
-                            ) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
-                            <Info className="h-4 w-4 text-gray-500 cursor-help ml-auto" /> {/* ★ Info アイコンを使用 */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
+                            <div className="flex items-center">
+                                <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>🚀</span>
+                                <MetricLabel
+                                    label="10年後予測(モデル)"
+                                    explanation={explanations.prediction10y}
+                                />
+                            </div>
+                            <div className="ml-8 sm:ml-auto">
+                                {prediction10y !== null ? (
+                                    <span className={`${smallClass} ${textPrimaryClass}`}>
+                                        {formatCurrency(prediction10y.median.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction10y.median.usd, 'USD')})
+                                        </span> /
+                                        {formatCurrency(prediction10y.support.jpy, 'JPY')}
+                                        <span className={`${smallClass} ${textMutedClass}`}>
+                                            ({formatCurrency(prediction10y.support.usd, 'USD')})
+                                        </span>
+                                    </span>
+                                ) : (
+                                    <span className={`${smallClass} ${textMutedClass}`}>計算中...</span>
+                                )}
+                            </div>
                         </div>
                         {/* 関連リンク */}
                         <div className="pt-4 border-t border-gray-700 flex flex-wrap gap-x-4 gap-y-2 justify-end">
-                            <Link to="/power-law-explanation" className={`${linkClass} inline-flex items-center text-sm`}> <Info className="h-4 w-4 mr-1" /> パワーローモデルとは？ </Link> {/* ★ Info アイコンを使用 */}
+                            <Link to="/power-law-explanation" className={`${linkClass} inline-flex items-center text-sm`}>
+                                <Info className="h-4 w-4 mr-1" /> パワーローモデルとは？
+                            </Link>
                         </div>
                     </div>
                 </section>

@@ -187,7 +187,7 @@ const BitcoinBasics: React.FC = () => {
                                 <span className="inline-block w-2 h-2 rounded-full bg-[#F87171] mr-2" /> 留意点
                             </h3>
                             <ul className={`${typography.body} ${colors.textSecondary} list-disc list-inside space-y-1`}>
-                                <li><strong className="font-semibold">手数料:</strong> 通常の現物取引と比較して、スプレッド（売買価格差）や手数料が割高な場合がある。</li>
+                                <li><strong className="font-semibold">手数料:</strong> 積み立てサービスを利用する場合、通常の現物取引と比較して、スプレッド（売買価格差）や手数料が割高な場合がある。</li>
                                 <li><strong className="font-semibold">短期的な機会損失:</strong> 価格が底値圏にある時にまとめて購入する場合と比較して、短期的な上昇局面でのリターンは限定的になる可能性。</li>
                             </ul>
                         </div>

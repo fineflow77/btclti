@@ -1,15 +1,14 @@
-// src/pages/AnalysisNews.tsx
+// AnalysisNews.tsx 改善案 (型エラー修正版)
+
 import React, { useMemo } from 'react';
-// ★ 使われていないアイコンをインポートから削除
 import {
-    BarChart2, TrendingDown, Percent, /*HelpCircle,*/ Calendar, TrendingUp,
-    /*CheckCircle,*/ Activity, /*ExternalLink,*/ Info, /*LineChart,*/ /*Link as LinkIcon,*/ Target, BarChartHorizontal
+    BarChart2, TrendingDown, Percent, Calendar, TrendingUp,
+    Activity, Info, Target, BarChartHorizontal, PiggyBank
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// --- フック・ユーティリティ・コンポーネント ---
-import { useBitcoinData } from '../hooks/useBitcoinData'; // ★ 元のバージョンを使用
-// ★ 使われていない calculateRSquared をインポートから削除
+// 既存のフックとユーティリティをインポート
+import { useBitcoinData } from '../hooks/useBitcoinData';
 import {
     calculateVolatility, calculateDrawdown, calculateMean, calculateStdDev, calculateZScore
 } from '../utils/mathUtils';
@@ -17,10 +16,8 @@ import { getDaysSinceGenesis } from '../utils/dateUtils';
 import { formatCurrency, formatPercentage } from '../utils/formatters';
 import { btcPriceMedian, btcPriceSupport, getPowerLawPositionLabel, getPowerLawPositionColor } from '../utils/models';
 import DataContainer from '../components/ui/DataContainer';
-// ★ チャートはコメントアウト中なのでインポートもコメントアウト (エラー解消のため)
-// import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
 
-// --- スタイルクラス (変更なし) ---
+// 既存のスタイルクラスを維持
 const cardBaseClass = "bg-gray-800 bg-opacity-80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-gray-700";
 const textPrimaryClass = "text-gray-100";
 const textSecondaryClass = "text-gray-400";
@@ -33,15 +30,17 @@ const smallClass = "text-sm";
 const backgroundGradientClass = 'bg-gradient-to-b from-[#1a202c] via-[#2d3748] to-[#1a202c]';
 const gridClass = "grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5";
 
-// --- ヘルパー関数 (変更なし) ---
+// Z-Scoreの説明をより直感的に
 function getZScoreInterpretation(z: number | null): string {
     if (z === null) return 'N/A';
-    if (z > 2) return '非常に高い'; if (z > 1) return 'やや高い';
-    if (z < -2) return '非常に低い'; if (z < -1) return 'やや低い';
-    return '標準的';
+    if (z > 2) return '非常に割高 💸';
+    if (z > 1) return 'やや割高 ⚠️';
+    if (z < -2) return '超割安！🔥';
+    if (z < -1) return 'やや割安 👍';
+    return '適正水準 ✓';
 };
 
-// 指標ラベルコンポーネント
+// 指標ラベルコンポーネントは変更なし
 const MetricLabel: React.FC<{ label: string, explanation: string }> = ({ label, explanation }) => {
     return (
         <div className="flex flex-col">
@@ -52,27 +51,26 @@ const MetricLabel: React.FC<{ label: string, explanation: string }> = ({ label, 
 };
 
 const AnalysisNews: React.FC = () => {
-    // 説明テキストを追加
+    // 説明テキストをより簡潔に
     const explanations = {
-        volatility: "過去30日間の日次対数収益率の標準偏差(年率)",
-        drawdown: "記録されている最高値からの現在価格の下落率",
-        zScore: "中央乖離率の統計的位置(標準偏差単位)",
-        rSquared: "パワーローモデルへの価格データの適合度",
-        prediction1y: "モデルによる1年後の予測価格(中央値/下限値)",
-        prediction3y: "モデルによる3年後の予測価格(中央値/下限値)",
-        prediction10y: "モデルによる10年後の予測価格(中央値/下限値)"
+        volatility: "値動きの激しさを表す指標（年率）。数値が大きいほど乱高下しやすい",
+        drawdown: "史上最高値からの下落率。どれだけ高値から下がっているかの指標",
+        zScore: "現在の価格が平均的な価格帯からどれだけ離れているか",
+        rSquared: "予測モデルの精度。1に近いほど信頼性が高い",
+        prediction1y: "1年後の予測価格(中央値/下限値)",
+        prediction3y: "3年後の予測価格(中央値/下限値)",
+        prediction10y: "10年後の予測価格(中央値/下限値)"
     };
 
-    // ★ 使われていない weeklyPrices, dailyPowerLawData, dataSources を削除 (必要に応じて戻す)
+    // 既存のデータフック呼び出し
     const {
         loading, error, currentPrice, dailyPrices,
-        powerLawData,        // Zスコア計算で使う
+        powerLawData,
         exchangeRate,
-        rSquared             // R2表示で使う
-        // dataSources // データソース表示しない場合は削除
+        rSquared
     } = useBitcoinData();
 
-    // --- useMemo 計算 (エラーハンドリング強化済み) ---
+    // --- useMemo 計算部分は変更なし（そのまま維持） ---
     const { medianDeviation, supportDeviation } = useMemo(() => {
         if (!currentPrice?.prices?.usd) return { medianDeviation: null, supportDeviation: null };
         try {
@@ -154,15 +152,16 @@ const AnalysisNews: React.FC = () => {
 
                 {/* --- ページタイトル --- */}
                 <div className="text-center pt-4 pb-2">
-                    <h1 className={`${h1Class}`}>ビットコイン価格分析</h1>
+                    <h1 className={`${h1Class}`}>ビットコイン今日の値動き診断</h1>
                     <p className={`text-lg ${textMutedClass} mt-2 max-w-2xl mx-auto`}>
-                        パワーローモデルと各種テクニカル指標に基づいた現在の市場ポジションを分析します。
+                        パワーローモデルを活用した価格診断で、今が買い時か売り時かをチェック。
+                        長期投資家のための指標を見やすく整理しました。
                     </p>
                 </div>
 
                 {/* --- 現在の状況カード --- */}
                 <section aria-labelledby="current-status-heading" className={cardBaseClass}>
-                    <h2 id="current-status-heading" className={h2Class}> <TrendingUp className="h-5 w-5 mr-2" /> 現在の状況 </h2>
+                    <h2 id="current-status-heading" className={h2Class}> <TrendingUp className="h-5 w-5 mr-2" /> 今日のBTC診断結果 </h2>
                     <DataContainer isLoading={loading} error={error} loadingMessage="データロード中...">
                         <div className={gridClass}>
                             {/* 現在価格 */}
@@ -177,7 +176,7 @@ const AnalysisNews: React.FC = () => {
                             {/* パワーロー評価 */}
                             <div className="flex items-center space-x-2">
                                 <BarChartHorizontal className={`h-5 w-6 ${textSecondaryClass}`} />
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>評価:</span>
+                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>市場ポジション:</span>
                                 {(medianDeviation !== null && supportDeviation !== null) ? (
                                     <span className={`${bodyClass} font-semibold px-2 py-0.5 rounded`} style={{ backgroundColor: getPowerLawPositionColor(medianDeviation, supportDeviation), color: '#fff' }}>
                                         {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
@@ -187,13 +186,13 @@ const AnalysisNews: React.FC = () => {
                             {/* 中央乖離 */}
                             <div className="flex items-center space-x-2">
                                 <span className={`w-6 text-center ${textSecondaryClass}`}>📈</span>
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>中央乖離:</span>
+                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>標準値との差:</span>
                                 {medianDeviation !== null ? (<span className={`${bodyClass} ${textPrimaryClass} font-semibold ${medianDeviation > 0 ? 'text-green-400' : 'text-red-400'}`}>{formatPercentage(medianDeviation)}</span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
                             </div>
                             {/* 下限乖離 */}
                             <div className="flex items-center space-x-2">
                                 <span className={`w-6 text-center ${textSecondaryClass}`}>📉</span>
-                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>下限乖離:</span>
+                                <span className={`${bodyClass} ${textSecondaryClass} min-w-[70px]`}>下限値との差:</span>
                                 {supportDeviation !== null ? (<span className={`${bodyClass} ${textPrimaryClass} font-semibold ${supportDeviation > 0 ? 'text-green-400' : 'text-red-400'}`}>{formatPercentage(supportDeviation)}</span>) : (<span className={`${smallClass} ${textMutedClass}`}>計算中...</span>)}
                             </div>
                         </div>
@@ -202,7 +201,7 @@ const AnalysisNews: React.FC = () => {
 
                 {/* --- リスク & 統計指標カード --- */}
                 <section aria-labelledby="risk-stats-heading" className={cardBaseClass}>
-                    <h2 id="risk-stats-heading" className={h2Class}> <Activity className="h-5 w-5 mr-2" /> リスク & 統計指標 </h2>
+                    <h2 id="risk-stats-heading" className={h2Class}> <Activity className="h-5 w-5 mr-2" /> リスク指標 & 重要データ </h2>
                     <DataContainer isLoading={loading} error={error} loadingMessage="指標計算中...">
                         <div className="grid grid-cols-1 gap-y-5">
                             {/* ボラティリティ */}
@@ -210,7 +209,7 @@ const AnalysisNews: React.FC = () => {
                                 <div className="flex items-center">
                                     <BarChart2 className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
                                     <MetricLabel
-                                        label="ボラティリティ"
+                                        label="値動きの激しさ"
                                         explanation={explanations.volatility}
                                     />
                                 </div>
@@ -229,7 +228,7 @@ const AnalysisNews: React.FC = () => {
                                 <div className="flex items-center">
                                     <TrendingDown className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
                                     <MetricLabel
-                                        label="下落率(ATH)"
+                                        label="最高値からの下落"
                                         explanation={explanations.drawdown}
                                     />
                                 </div>
@@ -248,7 +247,7 @@ const AnalysisNews: React.FC = () => {
                                 <div className="flex items-center">
                                     <Percent className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
                                     <MetricLabel
-                                        label="乖離Zスコア"
+                                        label="価格の偏り度"
                                         explanation={explanations.zScore}
                                     />
                                 </div>
@@ -270,7 +269,7 @@ const AnalysisNews: React.FC = () => {
                                 <div className="flex items-center">
                                     <Target className={`h-5 w-6 ${textSecondaryClass} mr-2`} />
                                     <MetricLabel
-                                        label="モデル適合度(R²)"
+                                        label="モデル信頼度"
                                         explanation={explanations.rSquared}
                                     />
                                 </div>
@@ -288,39 +287,17 @@ const AnalysisNews: React.FC = () => {
                     </DataContainer>
                 </section>
 
-                {/* --- パワーローチャート (コメントアウト中) --- */}
-                {/*
-                <section aria-labelledby="powerlaw-chart-heading" className={cardBaseClass}>
-                     <h2 id="powerlaw-chart-heading" className={h2Class}> <LineChart className="h-5 w-5 mr-2" /> パワーローモデル チャート </h2>
-                    <DataContainer isLoading={loading || !powerLawData || powerLawData.length === 0} error={error} loadingMessage="チャートデータ生成中...">
-                        <PowerLawChartWrapper
-                            powerLawData={powerLawData || []}
-                            dailyPowerLawData={dailyPowerLawData || []}
-                            currentPrice={currentPrice}
-                            exchangeRate={exchangeRate}
-                            rSquared={rSquared}
-                            isLoading={loading}
-                            error={error}
-                        />
-                    </DataContainer>
-                    <p className={`text-xs ${textMutedClass} mt-3 text-center`}>
-                        対数スケールチャート。実線: 価格(USD), 点線: モデル中央値, 破線: モデル下限値。
-                        {dataSources && ( ` データソース: ${dataSources.dailyPrices || 'N/A'} (日次), ${dataSources.weeklyPrices || 'N/A'} (週次)` )}
-                    </p>
-                </section>
-                */}
-
                 {/* --- 将来予測 --- */}
                 <section aria-labelledby="forecast-info-heading" className={cardBaseClass}>
-                    <h2 id="forecast-info-heading" className={h2Class}> <Calendar className="h-5 w-5 mr-2" /> 将来予測 & 関連情報 </h2>
+                    <h2 id="forecast-info-heading" className={h2Class}> <Calendar className="h-5 w-5 mr-2" /> 未来予測 & 長期見通し </h2>
                     <div className="space-y-5">
                         {/* 1年後予測 */}
                         <div className="flex flex-col sm:flex-row sm:items-center gap-y-1 sm:gap-x-4">
                             <div className="flex items-center">
                                 <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>🔮</span>
                                 <MetricLabel
-                                    label="1年後予測(モデル)"
-                                    explanation={explanations.prediction1y}
+                                    label="1年後の予想価格"
+                                    explanation="長期トレンドに基づいた1年後の予測価格範囲"
                                 />
                             </div>
                             <div className="ml-8 sm:ml-auto">
@@ -345,8 +322,8 @@ const AnalysisNews: React.FC = () => {
                             <div className="flex items-center">
                                 <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>✨</span>
                                 <MetricLabel
-                                    label="3年後予測(モデル)"
-                                    explanation={explanations.prediction3y}
+                                    label="3年後の予想価格"
+                                    explanation="長期トレンドに基づいた3年後の予測価格範囲"
                                 />
                             </div>
                             <div className="ml-8 sm:ml-auto">
@@ -371,8 +348,8 @@ const AnalysisNews: React.FC = () => {
                             <div className="flex items-center">
                                 <span className={`w-6 text-center ${textSecondaryClass} mr-2`}>🚀</span>
                                 <MetricLabel
-                                    label="10年後予測(モデル)"
-                                    explanation={explanations.prediction10y}
+                                    label="10年後の予想価格"
+                                    explanation="長期積立投資の目標値として参考にできる予測範囲"
                                 />
                             </div>
                             <div className="ml-8 sm:ml-auto">
@@ -395,7 +372,10 @@ const AnalysisNews: React.FC = () => {
                         {/* 関連リンク */}
                         <div className="pt-4 border-t border-gray-700 flex flex-wrap gap-x-4 gap-y-2 justify-end">
                             <Link to="/power-law-explanation" className={`${linkClass} inline-flex items-center text-sm`}>
-                                <Info className="h-4 w-4 mr-1" /> パワーローモデルとは？
+                                <Info className="h-4 w-4 mr-1" /> モデルの仕組みをわかりやすく解説
+                            </Link>
+                            <Link to="/simulators/investment" className={`${linkClass} inline-flex items-center text-sm ml-4`}>
+                                <PiggyBank className="h-4 w-4 mr-1" /> 積立シミュレーターを試す
                             </Link>
                         </div>
                     </div>

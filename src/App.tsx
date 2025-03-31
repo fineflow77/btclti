@@ -75,7 +75,7 @@ const App: React.FC = () => {
         <div className="container mx-auto px-4 text-center text-gray-400 text-sm">
           <p>※ 予測は理論モデルに基づく参考値です。投資は自己責任で。</p>
           <p className="mt-2">
-            © 2025 ビットコイン長期投資研究所{' '}
+            © 2025 リュウ@ビットコイン長期投資ラボ{' '}
             <a href="https://x.com/DrPowerLaw" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0]">
               @DrPowerLaw
             </a>

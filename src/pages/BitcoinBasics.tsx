@@ -36,11 +36,11 @@ const BitcoinBasics: React.FC = () => {
 
                 {/* タイトルと説明文をもっと親しみやすく */}
                 <div className="text-center">
-                    <h1 className={`${typography.h1} text-[#3B82F6] mb-5`}>NISA卒業生のための次の一手：ビットコイン投資入門</h1>
+                    <h1 className={`${typography.h1} text-[#3B82F6] mb-5`}>ビットコイン投資入門</h1>
                     <p className={`${typography.body} ${colors.textSecondary} max-w-3xl mx-auto`}>
                         「NISA枠を使い切ったけど、もっと資産を増やしたい」<br />
                         「長期的な視点で次の投資先を探している」<br />
-                        そんな30代の方々へ。ビットコインを資産形成の選択肢として考えるための基礎知識をわかりやすく解説します。
+                        そんな投資意欲の強い方へ。ビットコインを資産形成の選択肢として考えるための基礎知識をわかりやすく解説します。
                     </p>
                 </div>
 
@@ -109,7 +109,7 @@ const BitcoinBasics: React.FC = () => {
                 <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <TrendingUp className="h-5 w-5 mr-2" />
-                        NISA卒業生が検討すべき理由とリスク
+                        検討すべき理由とリスク
                     </h2>
 
                     <div className="grid md:grid-cols-2 gap-6">
@@ -131,7 +131,7 @@ const BitcoinBasics: React.FC = () => {
                                 <li>
                                     <strong className="font-semibold">分散投資効果の向上</strong><br />
                                     <span className="text-sm">株式や債券とは異なる値動きをするため、ポートフォリオ全体のリスク分散効果が
-                                        期待できます。NISA枠の株式投資と組み合わせることで、より安定した資産形成が可能になるかもしれません。</span>
+                                        期待できます。NISA枠の投資信託と組み合わせることで、より安定した資産形成が可能になるかもしれません。</span>
                                 </li>
                             </ul>
                         </div>
@@ -196,7 +196,7 @@ const BitcoinBasics: React.FC = () => {
                                         <Link to="https://coin.z.com/jp/" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0] font-medium">
                                             GMOコイン
                                         </Link>
-                                        <p className="text-xs mt-1 text-gray-300">初心者向け UI、自動積立機能あり</p>
+                                        <p className="text-xs mt-1 text-gray-300">初心者向け UI、自動積み立て機能あり</p>
                                     </div>
                                     <div className="bg-gray-700 p-3 rounded-lg">
                                         <Link to="https://bitbank.cc/" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0] font-medium">
@@ -208,7 +208,7 @@ const BitcoinBasics: React.FC = () => {
                                         <Link to="https://bitflyer.com/ja-jp/" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0] font-medium">
                                             bitFlyer
                                         </Link>
-                                        <p className="text-xs mt-1 text-gray-300">大手で安心感、積立サービスあり</p>
+                                        <p className="text-xs mt-1 text-gray-300">大手で安心感、積み立てサービスあり</p>
                                     </div>
                                 </div>
                             </div>
@@ -217,13 +217,13 @@ const BitcoinBasics: React.FC = () => {
                         <div className="bg-gray-700 bg-opacity-30 p-5 rounded-lg">
                             <h3 className={`${typography.subtitle} ${colors.textPrimary} mb-2 flex items-center`}>
                                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white mr-2">2</span>
-                                少額から始める積立投資の設定
+                                少額から始める積み立て投資の設定
                             </h3>
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div>
                                     <p className={`${typography.body} ${colors.textSecondary} mb-2`}>
                                         口座開設後、まずは少額から始めることをおすすめします。
-                                        毎月3,000円や5,000円といった、財布に優しい金額から自動積立を設定しましょう。
+                                        毎月3,000円や5,000円といった、財布に優しい金額から自動積み立てを設定しましょう。
                                     </p>
                                     <p className={`${typography.body} ${colors.textSecondary}`}>
                                         これにより、価格が高い時には少ない量を、安い時には多くの量を自動的に購入していく
@@ -233,8 +233,8 @@ const BitcoinBasics: React.FC = () => {
                                 <div className="bg-blue-900 bg-opacity-20 p-3 rounded-lg border border-blue-800">
                                     <h4 className="text-sm font-medium text-blue-300 mb-2">NISAとの併用プラン例</h4>
                                     <ul className="text-xs text-gray-300 list-disc list-inside space-y-1">
-                                        <li>NISA：月18,000円でインデックスファンド積立</li>
-                                        <li>暗号資産：月5,000円でビットコイン積立</li>
+                                        <li>NISA：月18,000円でインデックスファンド積み立て</li>
+                                        <li>暗号資産：月5,000円でビットコイン積み立て</li>
                                         <li>合計：月23,000円の資産形成プラン</li>
                                     </ul>
                                     <p className="text-xs mt-2 text-gray-400">
@@ -275,16 +275,16 @@ const BitcoinBasics: React.FC = () => {
                 <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <PiggyBank className="h-5 w-5 mr-2" />
-                        NISA経験者におすすめ：ビットコインの積立投資術
+                        ビットコインの積み立て投資術
                     </h2>
 
                     <div className="bg-gray-700 bg-opacity-30 p-5 rounded-lg mb-6">
                         <div className="grid md:grid-cols-2 gap-6">
                             <div>
-                                <h3 className="text-lg font-medium text-blue-300 mb-3">積立投資がおすすめな理由</h3>
+                                <h3 className="text-lg font-medium text-blue-300 mb-3">積み立て投資がおすすめな理由</h3>
                                 <p className="text-sm text-gray-300 mb-3">
                                     ビットコインの価格は短期的に大きく変動することがありますが、
-                                    「積立投資（ドルコスト平均法）」を活用することで、そのリスクを抑えることができます。
+                                    「積み立て投資（ドルコスト平均法）」を活用することで、そのリスクを抑えることができます。
                                 </p>
                                 <p className="text-sm text-gray-300">
                                     NISAでの投資と同じように、「時間分散効果」により平均購入単価を平準化し、
@@ -293,12 +293,12 @@ const BitcoinBasics: React.FC = () => {
                             </div>
                             <div>
                                 <div className="bg-blue-900 bg-opacity-20 p-4 rounded-lg border border-blue-800">
-                                    <h4 className="text-blue-300 font-medium mb-2">NISA経験者向けの積立戦略例</h4>
+                                    <h4 className="text-blue-300 font-medium mb-2">積み立て戦略例</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-start">
                                             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs mr-2 mt-0.5">1</span>
                                             <p className="text-sm text-gray-300">
-                                                <strong>基本積立</strong>：毎月決まった日に一定金額を自動購入
+                                                <strong>基本積み立て</strong>：毎月決まった日に一定金額を自動購入
                                             </p>
                                         </div>
                                         <div className="flex items-start">
@@ -310,7 +310,7 @@ const BitcoinBasics: React.FC = () => {
                                         <div className="flex items-start">
                                             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs mr-2 mt-0.5">3</span>
                                             <p className="text-sm text-gray-300">
-                                                <strong>大暴落時の追加投資</strong>：価格が30%以上下落した時に臨時積立
+                                                <strong>大暴落時の追加投資</strong>：価格が30%以上下落した時に臨時積み立て
                                             </p>
                                         </div>
                                     </div>
@@ -321,7 +321,7 @@ const BitcoinBasics: React.FC = () => {
 
                     <div className="grid md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-gray-700 bg-opacity-30 p-4 rounded-lg">
-                            <h3 className="text-green-400 font-medium mb-2 text-center">💪 積立のメリット</h3>
+                            <h3 className="text-green-400 font-medium mb-2 text-center">💪 積み立てのメリット</h3>
                             <ul className="text-sm text-gray-300 list-disc list-inside space-y-2">
                                 <li>価格の高値掴みリスクを低減</li>
                                 <li>感情的な判断を排除できる</li>
@@ -333,7 +333,7 @@ const BitcoinBasics: React.FC = () => {
                         <div className="bg-gray-700 bg-opacity-30 p-4 rounded-lg">
                             <h3 className="text-yellow-400 font-medium mb-2 text-center">⚠️ 留意点</h3>
                             <ul className="text-sm text-gray-300 list-disc list-inside space-y-2">
-                                <li>積立サービスの手数料確認</li>
+                                <li>積み立てサービスの手数料確認</li>
                                 <li>極端な暴落時でも継続する意志</li>
                                 <li>税金は自己申告が必要</li>
                             </ul>
@@ -354,7 +354,7 @@ const BitcoinBasics: React.FC = () => {
                             to="/simulators/investment"
                             className={`${colors.primary} px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
                         >
-                            あなたの積立プランをシミュレーションする
+                            あなたの積み立てプランをシミュレーションする
                             <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                     </div>
@@ -380,7 +380,7 @@ const BitcoinBasics: React.FC = () => {
                             className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-5 py-2 rounded-full text-sm font-medium inline-flex items-center transition-colors"
                         >
                             <Calculator className="mr-2 h-4 w-4" />
-                            積立シミュレーションを試す
+                            積み立てシミュレーションを試す
                         </Link>
                     </div>
                 </div>

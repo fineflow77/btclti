@@ -198,7 +198,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
 
                         <div className="bg-gray-700 bg-opacity-30 p-4 rounded-lg mb-4">
                             <h3 className="text-blue-300 font-semibold mb-2 flex items-center">
-                                <span className="mr-2">⏱️</span> 3. 定期積立の実践
+                                <span className="mr-2">⏱️</span> 3. 定期積み立ての実践
                             </h3>
                             <p>
                                 市場のタイミングを完璧に当てるのは困難です。そこで「ドルコスト平均法」を活用し、
@@ -206,7 +206,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                                 長期的な上昇トレンドの恩恵を受けられる可能性が高まります。
                             </p>
                             <p className="mt-2 text-sm text-gray-400 border-l-2 border-blue-300 pl-2">
-                                例：つみたてNISAのように、毎月3万円程度を自動積立に設定すれば、
+                                例：つみたてNISAのように、毎月3万円程度を自動積み立てに設定すれば、
                                 価格変動に一喜一憂せず長期的な資産形成が可能に。
                             </p>
                         </div>
@@ -218,7 +218,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                             <p className="text-sm text-center">
                                 ビットコインも同様に長期視点で見ることで、
                                 ポートフォリオの分散と成長性を高める選択肢になります。
-                                月々の積立をNISAとビットコインで分散するアプローチも検討してみましょう。
+                                月々の積み立てをNISAとビットコインで分散するアプローチも検討してみましょう。
                             </p>
                         </div>
                     </div>
@@ -342,7 +342,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                                 to="/simulators/investment"
                                 className={`${colors.primary} px-5 py-2 rounded-full text-sm font-medium inline-flex items-center transition-colors`}
                             >
-                                積立シミュレーターで自分の戦略を試す
+                                積み立てシミュレーターで自分の戦略を試す
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                         </div>

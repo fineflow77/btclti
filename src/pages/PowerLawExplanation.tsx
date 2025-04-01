@@ -134,13 +134,12 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                                     <span className="font-semibold text-red-400">赤の線（下限線）</span>：過去にあまり下がらなかった「底値目安」
                                 </li>
                                 <li>
-                                    <span className="font-semibold text-blue-300">現在の価格</span>：今がトレンドのどこにいるかを示す
+                                    <span className="font-semibold text-amber-300">現在の価格</span>：今がトレンドのどこにいるかを示す
                                 </li>
                             </ul>
                         </div>
                         <p>
                             たとえば、価格が赤い線に近づくと「買い時」、緑の線から大きく離れると「過熱気味」と考える目安になります。
-                            NISAの積み立てタイミングを考える感覚に近いかもしれません。
                         </p>
                         {chartComponent}
                     </div>
@@ -176,7 +175,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                                 <span className="mr-2">⏱️</span> 3. 毎月コツコツ積み立て
                             </h3>
                             <p>
-                                タイミングを完璧に狙うのは難しい。だからこそ、NISAみたいに毎月一定額を積み立てるのが現実的。
+                                タイミングを完璧に狙うのは難しい。だからこそ、NISAのように毎月一定額を積み立てるのが現実的。
                                 価格が下がっても焦らず続けられるプランが大事です。
                             </p>
                         </div>
@@ -215,7 +214,7 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                         </div>
                         <p className="mt-4">
                             ボラティリティが怖いなら、少額から始めて様子を見るのが賢明。
-                            NISAと組み合わせつつ、少しずつ慣れていくのがおすすめです。
+                            少しずつ慣れていくのがおすすめです。
                         </p>
                     </div>
                 </section>
@@ -256,19 +255,6 @@ const PowerLawExplanation: React.FC<PowerLawExplanationProps> = ({ chartComponen
                         </div>
                     </div>
                 </section>
-
-                {/* フッター */}
-                <footer className="text-center text-gray-400 mt-12 py-4 border-t border-gray-700">
-                    <p>
-                        © {new Date().getFullYear()} ビットコイン長期投資研究所{' '}
-                        <a href="https://x.com/DrPowerLaw" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0]">
-                            @DrPowerLaw
-                        </a>
-                    </p>
-                    <p className={`${typography.small} mt-2`}>
-                        ※投資は自己責任で。価格変動リスクを理解した上で判断してください。
-                    </p>
-                </footer>
             </div>
         </div>
     );

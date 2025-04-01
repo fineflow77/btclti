@@ -99,7 +99,7 @@ const BitcoinBasics: React.FC = () => {
                                     <strong>インフレ対策</strong>：お金の価値が下がるのを防ぐ手段として注目されています。
                                 </li>
                                 <li>
-                                    <strong>分散効果</strong>：株や債券と動きが違うので、NISAと組み合わせるとリスクが減る可能性も。
+                                    <strong>分散効果</strong>：株や債券と動きが違うので、組み合わせによってリスクが減る可能性も。
                                 </li>
                             </ul>
                         </div>
@@ -120,7 +120,8 @@ const BitcoinBasics: React.FC = () => {
                     </div>
                     <div className="bg-blue-900 bg-opacity-20 p-4 rounded-lg mt-6 border border-blue-800">
                         <p className={`${typography.body} text-center ${colors.textPrimary}`}>
-                            NISAと違って税金の優遇はない点に注意。利益には最大55%の税金がかかる場合も考慮してください。
+                            税金の優遇はない点に注意。2025年現在、総合課税のため、利益には最大55%の税金がかかる場合も考慮してください。
+                            ただし、2026年に分離課税が導入されるという観測もあります。これによりビットコイン投資のハードルが一気に下がります。
                         </p>
                     </div>
                 </div>

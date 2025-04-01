@@ -45,14 +45,14 @@ const BitcoinBasics: React.FC = () => {
                         ビットコインってどんなもの？
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-3`}>
-                        ビットコインは2009年に登場したデジタル通貨です。
+                        ビットコインは2009年に登場したデジタル資産です。
                         銀行や政府を通さず、ネット上で直接やりとりできるのが特徴で、新しい資産として注目されています。
                     </p>
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
                         <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
                             <h3 className="text-blue-300 font-semibold mb-2">決まった量しかない</h3>
                             <p className="text-sm">
-                                最大2100万枚しか発行されません。円やドルみたいに増えすぎないので、希少性があります。
+                                最大2100万枚しか発行されません。円やドルといった法定通貨のように増えすぎないので、希少性があります。
                             </p>
                         </div>
                         <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
@@ -64,13 +64,12 @@ const BitcoinBasics: React.FC = () => {
                         <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
                             <h3 className="text-blue-300 font-semibold mb-2">価値が減りにくい</h3>
                             <p className="text-sm">
-                                発行量が限られているから、インフレで価値が落ちにくい。「デジタルゴールド」とも呼ばれます。
+                                発行量が限られているため、インフレで価値が落ちにくい。「デジタルゴールド」とも呼ばれます。
                             </p>
                         </div>
                     </div>
                     <p className={`${typography.body} ${colors.textSecondary}`}>
                         これまで価格は大きく動いてきましたが、長期で見ると成長傾向にあります。
-                        ただ、過去の結果が未来を約束するわけではないので、慎重に考えることが大切です。
                     </p>
                     <div className="mt-5 text-right">
                         <Link
@@ -130,11 +129,10 @@ const BitcoinBasics: React.FC = () => {
                 <div className={`${colors.cardBg} p-6 rounded-2xl shadow-md ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.info} mb-4 flex items-center`}>
                         <Shield className="h-5 w-5 mr-2" />
-                        ビットコインを始める3ステップ
+                        ビットコイン投資を始める3ステップ
                     </h2>
                     <p className={`${typography.body} ${colors.textSecondary} mb-4`}>
-                        ビットコイン投資は、NISAの口座開設と同じくらい簡単にスタートできます。
-                        まずは信頼できる取引所を選ぶことから。
+                        ビットコイン投資の第一歩は、信頼できる取引所を選ぶことから。
                     </p>
                     <div className="space-y-6">
                         <div className="bg-gray-700 bg-opacity-30 p-5 rounded-lg">

@@ -71,13 +71,18 @@ const App: React.FC = () => {
           </Routes>
         </Suspense>
       </main>
-      <footer className="bg-[#1a202c] py-6">
-        <div className="container mx-auto px-4 text-center text-gray-400 text-sm">
+      <footer className="bg-[#1a202c] py-4">
+        <div className="mx-auto max-w-screen-sm px-4 text-center text-gray-400 text-xs leading-tight">
           <p>※ 予測は理論モデルに基づく参考値です。投資は自己責任で。</p>
-          <p className="mt-2">
-            © 2025 リュウ@ビットコイン長期投資ラボ{' '}
-            <a href="https://x.com/DrPowerLaw" target="_blank" rel="noopener noreferrer" className="text-[#3B82F6] hover:text-[#2b6cb0]">
-              @DrPowerLaw
+          <p className="mt-1">
+            © 2025
+            <a
+              href="https://x.com/DrPowerLaw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#60A5FA] hover:text-[#2b6cb0] transition-colors duration-300 underline-offset-2 hover:underline"
+            >
+              リュウ@ビットコイン長期投資ラボ
             </a>
           </p>
           <div className="mt-2 flex justify-center">
@@ -86,7 +91,7 @@ const App: React.FC = () => {
               className="text-gray-400 hover:text-[#3B82F6] transition-colors duration-300"
               aria-label="Xでシェア"
             >
-              <X size={20} /> {/* Twitter アイコンを X アイコンに変更 */}
+              <X size={18} />
             </button>
           </div>
         </div>

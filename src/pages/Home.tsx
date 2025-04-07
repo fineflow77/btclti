@@ -303,7 +303,6 @@ const Home: React.FC = () => {
 
 
         {/* --- ニュースと分析への導線 ここから --- */}
-        {/* mt-12 は削除 */}
         <div className="text-center">
           <Link
             to="/analysis-news"

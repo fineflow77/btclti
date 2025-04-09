@@ -97,13 +97,20 @@ const Home: React.FC = () => {
 
         {/* --- 価格情報セクション ここから --- */}
         <div className="space-y-6"> {/* カードグリッドと為替情報の間隔 */}
-          {/* 価格カードグリッド */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {/* 現在価格カード */}
-            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <h3 className={`${typography.subtitle} ${colors.amber} mb-3 flex items-center`}>
-                <TrendingUp className="h-5 w-5 mr-2" /> 現在価格
-              </h3>
+          {/* 価格カードグリッド - モバイルでの縦方向の最適化 */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            {/* 現在価格カード - Optimized for vertical display */}
+            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <div className="flex justify-between items-center mb-1 sm:mb-3">
+                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.amber} flex items-center`}>
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> 現在価格
+                </h3>
+                {priceChangePercentage !== null && (
+                  <div className={`text-xs font-medium ${priceChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(1)}%
+                  </div>
+                )}
+              </div>
               <DataContainer
                 isLoading={loading}
                 error={error}
@@ -111,39 +118,43 @@ const Home: React.FC = () => {
                 noDataMessage="価格データが利用できません"
               >
                 {currentPrice && currentPrice.prices.usd ? (
-                  <div className="space-y-2">
-                    <div className="text-3xl font-bold text-[#D4AF37]">
-                      {formatCurrency(currentPrice.prices.jpy, 'JPY')}
-                    </div>
-                    <div className={`${typography.tiny} ${colors.textMuted}`}>
-                      ({formatCurrency(currentPrice.prices.usd, 'USD')})
-                    </div>
-                    {priceChangePercentage !== null && (
-                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                        前日比: {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(2)}%
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xl sm:text-3xl font-bold text-[#D4AF37]">
+                        {formatCurrency(currentPrice.prices.jpy, 'JPY')}
                       </div>
-                    )}
+                      <div className={`${typography.tiny} ${colors.textMuted}`}>
+                        ({formatCurrency(currentPrice.prices.usd, 'USD')})
+                      </div>
+                    </div>
                     {medianDeviation !== null && (
-                      <div className="mt-2">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium bg-opacity-20 hover:bg-[#b8972f]/20 hover:text-[#b8972f] transition-all duration-300`}
-                          style={{
-                            backgroundColor: `${getPowerLawPositionColor(medianDeviation, supportDeviation)}20`,
-                            color: getPowerLawPositionColor(medianDeviation, supportDeviation),
-                          }}
-                        >
-                          {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
-                        </span>
-                      </div>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-opacity-20`}
+                        style={{
+                          backgroundColor: `${getPowerLawPositionColor(medianDeviation, supportDeviation)}20`,
+                          color: getPowerLawPositionColor(medianDeviation, supportDeviation),
+                        }}
+                      >
+                        {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
+                      </span>
                     )}
                   </div>
                 ) : null}
               </DataContainer>
             </div>
 
-            {/* 中央価格カード */}
-            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <h3 className={`${typography.subtitle} ${colors.green} mb-3`}>本日のパワーロー 中央価格</h3>
+            {/* 中央価格カード - Optimized for vertical display */}
+            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <div className="flex justify-between items-center mb-1 sm:mb-3">
+                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.green} flex items-center`}>
+                  中央価格
+                </h3>
+                {medianDeviation !== null && (
+                  <div className={`text-xs font-medium ${medianDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    乖離: {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}%
+                  </div>
+                )}
+              </div>
               <DataContainer
                 isLoading={loading}
                 error={error}
@@ -151,26 +162,32 @@ const Home: React.FC = () => {
                 noDataMessage="中央価格データが利用できません"
               >
                 {powerLawData && powerLawData.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="text-2xl font-semibold text-[#10B981]">
-                      {formatCurrency(medianPrice * exchangeRate, 'JPY')}
-                    </div>
-                    <div className={`${typography.tiny} ${colors.textMuted}`}>
-                      ({formatCurrency(medianPrice, 'USD')})
-                    </div>
-                    {medianDeviation !== null && (
-                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                        現在価格は、この価格より {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}% 乖離
+                  <div className="flex items-center">
+                    <div>
+                      <div className="text-xl sm:text-2xl font-semibold text-[#10B981]">
+                        {formatCurrency(medianPrice * exchangeRate, 'JPY')}
                       </div>
-                    )}
+                      <div className={`${typography.tiny} ${colors.textMuted}`}>
+                        ({formatCurrency(medianPrice, 'USD')})
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </DataContainer>
             </div>
 
-            {/* 下限価格カード */}
-            <div className={`${colors.cardBg} p-6 rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <h3 className={`${typography.subtitle} ${colors.pink} mb-3`}>本日のパワーロー 下限価格</h3>
+            {/* 下限価格カード - Optimized for vertical display */}
+            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
+              <div className="flex justify-between items-center mb-1 sm:mb-3">
+                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.pink} flex items-center`}>
+                  下限価格
+                </h3>
+                {supportDeviation !== null && (
+                  <div className={`text-xs font-medium ${supportDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    乖離: {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}%
+                  </div>
+                )}
+              </div>
               <DataContainer
                 isLoading={loading}
                 error={error}
@@ -178,18 +195,15 @@ const Home: React.FC = () => {
                 noDataMessage="下限価格データが利用できません"
               >
                 {powerLawData && powerLawData.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="text-2xl font-semibold text-[#FF69B4]">
-                      {formatCurrency(supportPrice * exchangeRate, 'JPY')}
-                    </div>
-                    <div className={`${typography.tiny} ${colors.textMuted}`}>
-                      ({formatCurrency(supportPrice, 'USD')})
-                    </div>
-                    {supportDeviation !== null && (
-                      <div className={`${typography.tiny} font-medium ${colors.textPrimary}`}>
-                        現在価格は、この価格より {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}% 乖離
+                  <div className="flex items-center">
+                    <div>
+                      <div className="text-xl sm:text-2xl font-semibold text-[#FF69B4]">
+                        {formatCurrency(supportPrice * exchangeRate, 'JPY')}
                       </div>
-                    )}
+                      <div className={`${typography.tiny} ${colors.textMuted}`}>
+                        ({formatCurrency(supportPrice, 'USD')})
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </DataContainer>

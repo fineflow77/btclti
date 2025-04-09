@@ -1,7 +1,7 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Info, ArrowUpRight } from 'lucide-react'; // Search を削除
+import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
 import { useBitcoinData } from '../hooks/useBitcoinData';
 import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
 import { formatCurrency } from '../utils/formatters';
@@ -42,7 +42,6 @@ const Home: React.FC = () => {
   const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData() as BitcoinData;
   const [rSquared, setRSquared] = useState<number>(0.9703);
   const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('loglog'); // Default to 'loglog' (Log Scale)
-  // const [isZoomed, setIsZoomed] = useState(false); // Zoom state management - 削除
 
   // useEffect, useMemo hooks are unchanged
   useEffect(() => {
@@ -90,10 +89,6 @@ const Home: React.FC = () => {
   }, [currentPrice, supportPrice]);
 
   const chartDataToUse = powerLawData || [];
-
-  // const handleZoomClick = useCallback(() => {  // handleZoomClick を削除
-  //   setIsZoomed(!isZoomed);
-  // }, [isZoomed]);
 
 
   return (
@@ -266,7 +261,7 @@ const Home: React.FC = () => {
                 exchangeRate={exchangeRate || 1}
                 currentPrice={currentPrice?.prices.usd}
                 height={500}
-                isLogScale={activeTab === 'loglog'} // isLogScale は loglog の時に true (修正)
+                isLogScale={activeTab === 'log'} // isLogScale は 'log' の時に true (修正)
               />
             </DataContainer>
 

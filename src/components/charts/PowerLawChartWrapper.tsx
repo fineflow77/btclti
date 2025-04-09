@@ -2,7 +2,7 @@
 import React from 'react';
 import PowerLawChart from './PowerLawChart';
 import LogLogPowerLawChart from './LogLogPowerLawChart';
-import { PowerLawChartWrapperProps } from '../../types';
+import { PowerLawChartWrapperProps } from '../../types'; // types.ts の修正を反映
 
 const PowerLawChartWrapper: React.FC<PowerLawChartWrapperProps> = (props) => {
     const { isLogScale, height, ...restProps } = props;
@@ -18,5 +18,4 @@ const PowerLawChartWrapper: React.FC<PowerLawChartWrapperProps> = (props) => {
         </div>
     );
 };
-
 export default PowerLawChartWrapper;

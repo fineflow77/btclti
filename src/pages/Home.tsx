@@ -1,7 +1,7 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Info, ArrowUpRight } from 'lucide-react'; // Search を削除
 import { useBitcoinData } from '../hooks/useBitcoinData';
 import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
 import { formatCurrency } from '../utils/formatters';
@@ -41,9 +41,10 @@ const colors: Record<string, string> = {
 const Home: React.FC = () => {
   const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData() as BitcoinData;
   const [rSquared, setRSquared] = useState<number>(0.9703);
-  const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('log');
+  const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('loglog'); // Default to 'loglog' (Log Scale)
+  // const [isZoomed, setIsZoomed] = useState(false); // Zoom state management - 削除
 
-  // useEffect, useMemo フックは変更なし
+  // useEffect, useMemo hooks are unchanged
   useEffect(() => {
     if (weeklyPrices && weeklyPrices.length > 0) {
       const calculatedRSquared = calculateRSquared(
@@ -90,16 +91,21 @@ const Home: React.FC = () => {
 
   const chartDataToUse = powerLawData || [];
 
+  // const handleZoomClick = useCallback(() => {  // handleZoomClick を削除
+  //   setIsZoomed(!isZoomed);
+  // }, [isZoomed]);
+
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
-      {/* space-y-12 で各セクションの間隔を設定 */}
+      {/* space-y-12 for section spacing */}
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
-        {/* --- 価格情報セクション ここから --- */}
-        <div className="space-y-6"> {/* カードグリッドと為替情報の間隔 */}
-          {/* 価格カードグリッド - モバイルでの縦方向の最適化 */}
+        {/* --- Price Information Section --- */}
+        <div className="space-y-6"> {/* Spacing between card grid and exchange rate info */}
+          {/* Price Card Grid - Optimized for vertical display on mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-            {/* 現在価格カード - Optimized for vertical display */}
+            {/* Current Price Card - Optimized for vertical display */}
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
               <div className="flex justify-between items-center mb-1 sm:mb-3">
                 <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.amber} flex items-center`}>
@@ -143,7 +149,7 @@ const Home: React.FC = () => {
               </DataContainer>
             </div>
 
-            {/* 中央価格カード - Optimized for vertical display */}
+            {/* Median Price Card - Optimized for vertical display */}
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
               <div className="flex justify-between items-center mb-1 sm:mb-3">
                 <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.green} flex items-center`}>
@@ -176,7 +182,7 @@ const Home: React.FC = () => {
               </DataContainer>
             </div>
 
-            {/* 下限価格カード - Optimized for vertical display */}
+            {/* Lower Bound Price Card - Optimized for vertical display */}
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
               <div className="flex justify-between items-center mb-1 sm:mb-3">
                 <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.pink} flex items-center`}>
@@ -210,7 +216,7 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* 為替レートと最終更新 */}
+          {/* Exchange Rate and Last Updated */}
           <div className="flex justify-between items-center bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 shadow-md">
             <div className={`${typography.small} ${colors.textMuted}`}>
               為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
@@ -224,30 +230,30 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
-        {/* --- 価格情報セクション ここまで --- */}
+        {/* --- Price Information Section End --- */}
 
 
-        {/* --- メイン：タブ付きパワーローチャート ここから --- */}
-        {/* mt-12 は削除 (親の space-y-12 が適用される) */}
+        {/* --- Main: Tabbed Power Law Chart --- */}
+        {/* mt-12 removed */}
         <div>
-          <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-6`}>長期パワーローチャート</h1>
-          <div className="flex justify-center mb-6 space-x-4">
+          <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-4`}>パワーローチャート</h1>
+          <div className="flex justify-center mb-2 space-x-10">
             <button
-              onClick={() => setActiveTab('log')}
-              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'log' ? colors.tabActive : colors.tabInactive
-                } hover:bg-gray-700/50`}
-            >
-              対数-対数スケール
-            </button>
-            <button
-              onClick={() => setActiveTab('loglog')}
+              onClick={() => setActiveTab('loglog')} // 'loglog' (Log Scale) button
               className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'loglog' ? colors.tabActive : colors.tabInactive
                 } hover:bg-gray-700/50`}
             >
-              対数スケール
+              logスケール
+            </button>
+            <button
+              onClick={() => setActiveTab('log')} // 'log' (Log-Log Scale) button
+              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'log' ? colors.tabActive : colors.tabInactive
+                } hover:bg-gray-700/50`}
+            >
+              log-logスケール
             </button>
           </div>
-          <div className={`rounded-2xl ${colors.cardBorder} overflow-hidden shadow-lg`}>
+          <div className="relative rounded-2xl ${colors.cardBorder} overflow-hidden shadow-lg"> {/* relative added */}
             <DataContainer
               isLoading={loading}
               error={error}
@@ -260,9 +266,10 @@ const Home: React.FC = () => {
                 exchangeRate={exchangeRate || 1}
                 currentPrice={currentPrice?.prices.usd}
                 height={500}
-                isLogScale={activeTab === 'log'}
+                isLogScale={activeTab === 'loglog'} // isLogScale は loglog の時に true (修正)
               />
             </DataContainer>
+
           </div>
           <div className="mt-6 text-center">
             <Link
@@ -276,11 +283,11 @@ const Home: React.FC = () => {
             </Link>
           </div>
         </div>
-        {/* --- メイン：タブ付きパワーローチャート ここまで --- */}
+        {/* --- Main: Tabbed Power Law Chart End --- */}
 
 
-        {/* --- シミュレーターへの導線 ここから --- */}
-        {/* mt-12 は削除 */}
+        {/* --- Simulator Links --- */}
+        {/* mt-12 removed */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
             to="/simulators/investment"
@@ -313,10 +320,10 @@ const Home: React.FC = () => {
             <ArrowUpRight className="h-6 w-6 text-white" />
           </Link>
         </div>
-        {/* --- シミュレーターへの導線 ここまで --- */}
+        {/* --- Simulator Links End --- */}
 
 
-        {/* --- ニュースと分析への導線 ここから --- */}
+        {/* --- Analysis News Link --- */}
         <div className="text-center">
           <Link
             to="/analysis-news"
@@ -326,7 +333,7 @@ const Home: React.FC = () => {
             <Info className="ml-2 h-4 w-4" />
           </Link>
         </div>
-        {/* --- ニュースと分析への導線 ここまで --- */}
+        {/* --- Analysis News Link End --- */}
 
       </div>
     </div>

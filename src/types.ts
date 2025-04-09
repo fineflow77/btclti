@@ -71,4 +71,5 @@ export interface PowerLawChartWrapperProps {
     currentPrice: number | undefined;
     height: number;
     isLogScale: boolean;
+    // isZoomed: boolean; // 削除  <- 削除しました
 }

@@ -26,7 +26,7 @@ const COLORS = {
 };
 
 const CHART_CONFIG = {
-    PRICE_LINE_WIDTH: 2,
+    PRICE_LINE_WIDTH: 1,
     MODEL_LINE_WIDTH: 2,
     REFERENCE_LINE_WIDTH: 2,
     MARGIN: { top: 10, right: 10, left: 30, bottom: 10 },

@@ -148,7 +148,7 @@ const Home: React.FC = () => {
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
               <div className="flex justify-between items-center mb-1 sm:mb-3">
                 <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.green} flex items-center`}>
-                  中央価格
+                  中央価格（予測）
                 </h3>
                 {medianDeviation !== null && (
                   <div className={`text-xs font-medium ${medianDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -181,7 +181,7 @@ const Home: React.FC = () => {
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
               <div className="flex justify-between items-center mb-1 sm:mb-3">
                 <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.pink} flex items-center`}>
-                  下限価格
+                  下限価格（予測）
                 </h3>
                 {supportDeviation !== null && (
                   <div className={`text-xs font-medium ${supportDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>

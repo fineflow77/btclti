@@ -3,6 +3,8 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react'; // <<< [修正①] この行をインポートに追加
+
 import Header from './components/layout/Header';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
@@ -77,6 +79,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+      <Analytics /> {/* <<< [修正②] この行を一番最後に追加 */}
     </div>
   );
 };

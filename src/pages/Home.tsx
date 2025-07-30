@@ -245,11 +245,6 @@ const Home: React.FC = () => {
 
     const { results, errors, simulate } = useWithdrawalSimulation();
 
-    const simulatorRef = useRef<HTMLDivElement | null>(null);
-
-    const handleScrollToSimulator = () => {
-        simulatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
 
     const runSimulation = useCallback(() => {
         try {
@@ -323,8 +318,8 @@ const Home: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900 text-gray-100 space-y-8">
             {/* ... ヒーローセクション (変更なし) ... */}
             <div className="text-center py-12 sm:py-16">
-                <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">
-                    ビットコインで、いつリタイアできる？
+                <h1 className="text-4xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">
+                    ビットコインで、いつFIREできる？
                 </h1>
                 <p className={`${typography.h3} text-gray-300 max-w-3xl mx-auto mt-4`}>
                     あなたが持つBTC資産を、将来の価格予測と連動させて「取り崩し」をシミュレーション。経済的自立へのリアルな計画を立てよう。
@@ -333,7 +328,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* ... シミュレーター入力部 (変更なし) ... */}
-            <div ref={simulatorRef} id="simulator" className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
+            <div id="simulator" className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className={`${typography.h2} ${colors.textPrimary}`}>
                         取り崩しシミュレーション

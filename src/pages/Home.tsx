@@ -11,7 +11,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 // スタイル定義
 const typography = {
-    h1: 'text-3xl sm:text-4xl font-extrabold tracking-tight',
+    h1: 'text-4xl sm:text-5xl font-extrabold tracking-tight', // スマホでも見栄えが良いように調整
     h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
     h3: 'text-lg sm:text-xl font-medium',
     body: 'text-sm sm:text-base font-normal',
@@ -50,7 +50,7 @@ interface SavedInputs {
     inflationRate: string;
 }
 
-// ツールチップアイコンコンポーネント (変更なし)
+// ツールチップアイコンコンポーネント
 const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
     <div className="group relative inline-block ml-2">
         <HelpCircle
@@ -63,7 +63,7 @@ const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
     </div>
 );
 
-// インプットフィールドコンポーネント (変更なし)
+// インプットフィールドコンポーネント
 const InputField: React.FC<{
     label: string;
     tooltip?: React.ReactNode;
@@ -80,12 +80,12 @@ const InputField: React.FC<{
     </div>
 );
 
-// ツールチップの内容 (変更なし)
+// ツールチップの内容を「FIRE」コンセプトに合わせて更新
 const TOOLTIPS = {
     initialBTC: "現在保有しているビットコインの量を入力してください。",
-    withdrawalAmount: "毎月の生活費として必要な金額を入力してください。税引き後の手取り額として計算されます。",
-    withdrawalRate: "資産からの年間取り崩し率を指定します。一般的なFIREでは4%が目安とされています。",
-    secondPhase: "特定の年から取り崩し方法や金額を変更できます。退職後の生活スタイルの変化などに対応します。",
+    withdrawalAmount: "FIRE後の毎月の生活費として必要な金額を入力してください。税引き後の手取り額として計算されます。",
+    withdrawalRate: "資産からの年間取り崩し率を指定します。一般的なFIRE理論では4%が目安とされています。",
+    secondPhase: "特定の年から生活スタイルを変更する場合（例: 子どもの独立後など）のプランを設定できます。",
     taxRate: "利益に対する税率を設定します。デフォルトは確定申告を行った場合の税率です。",
     exchangeRate: "円ドルの為替レートを設定します。",
     inflationRate: "年間の物価上昇率を設定します。",
@@ -101,7 +101,7 @@ const TOOLTIPS = {
     ),
 };
 
-// シミュレーション結果のハイライトコンポーネント (変更なし)
+// シミュレーション結果のハイライトコンポーネント
 const SimulationHighlights: React.FC<{
     initialBTC: string;
     startYear: string;
@@ -124,12 +124,12 @@ const SimulationHighlights: React.FC<{
                 </div>
             </div>
             <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>取り崩し開始年</div>
+                <div className={`${typography.small} ${colors.textMuted}`}>FIRE開始年</div>
                 <div className={`${typography.body} ${colors.textPrimary}`}>{startYear}年</div>
             </div>
             <div className="bg-gray-700 p-3 rounded-md">
                 <div className={`${typography.small} ${colors.textMuted}`}>
-                    {withdrawalType === "fixed" ? "月額取り崩し" : "年間取り崩し率"}
+                    {withdrawalType === "fixed" ? "毎月の生活費" : "年間取り崩し率"}
                 </div>
                 <div className={`${typography.body} ${colors.textPrimary}`}>
                     {withdrawalType === "fixed"
@@ -155,18 +155,15 @@ const SimulationHighlights: React.FC<{
     );
 };
 
-// ▼▼▼【重要】ここを修正 ▼▼▼
 // シミュレーション結果テーブルコンポーネント
 const SimulationResultsTable: React.FC<{
     results: any[];
     showSecondPhase: boolean;
 }> = ({ results, showSecondPhase }) => (
-    // 'hidden md:block' を削除し、コンテナ自体は常に描画可能にする
     <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
         <div className="flex justify-between mb-4">
-            <h3 className={`${typography.h3} ${colors.textPrimary}`}>シミュレーション結果</h3>
+            <h3 className={`${typography.h3} ${colors.textPrimary}`}>シミュレーション結果（年間推移）</h3>
         </div>
-        {/* 横スクロールを実現するコンテナ */}
         <div className="overflow-x-auto -mx-6 px-6">
             <table className="min-w-full divide-y divide-gray-700">
                 <thead className="bg-gray-700">
@@ -177,9 +174,9 @@ const SimulationResultsTable: React.FC<{
                             <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>段階</th>
                         )}
                         <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し率</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し額</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩しBTC</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>残り保有BTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年間生活費</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>売却BTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC残高</th>
                         <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>資産評価額</th>
                     </tr>
                 </thead>
@@ -239,12 +236,9 @@ const Home: React.FC = () => {
     const [exchangeRate, setExchangeRate] = useState<string>(DEFAULTS.EXCHANGE_RATE.toString());
     const [inflationRate, setInflationRate] = useState<string>(DEFAULTS.INFLATION_RATE.toString());
     const [isCalculating, setIsCalculating] = useState<boolean>(false);
-
-    // ▼▼▼【新規】スマホでの詳細テーブル表示を管理するState ▼▼▼
     const [showFullTableOnMobile, setShowFullTableOnMobile] = useState<boolean>(false);
 
     const { results, errors, simulate } = useWithdrawalSimulation();
-
 
     const runSimulation = useCallback(() => {
         try {
@@ -316,22 +310,19 @@ const Home: React.FC = () => {
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900 text-gray-100 space-y-8">
-            {/* ... ヒーローセクション (変更なし) ... */}
             <div className="text-center py-12 sm:py-16">
-                <h1 className="text-4xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">
-                    ビットコインで、いつFIREできる？
+                <h1 className={`${typography.h1} bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent`}>
+                    ビットコイン FIREシミュレーター
                 </h1>
                 <p className={`${typography.h3} text-gray-300 max-w-3xl mx-auto mt-4`}>
-                    あなたが持つBTC資産を、将来の価格予測と連動させて「取り崩し」をシミュレーション。経済的自立へのリアルな計画を立てよう。
+                    あなたのビットコイン資産で、いつ経済的自由を達成できるか。リアルな未来を予測し、具体的なFIREプランを描き出しましょう。
                 </p>
-
             </div>
 
-            {/* ... シミュレーター入力部 (変更なし) ... */}
             <div id="simulator" className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className={`${typography.h2} ${colors.textPrimary}`}>
-                        取り崩しシミュレーション
+                        FIREプランニング
                     </h2>
                     <button
                         onClick={restoreLastInputs}
@@ -342,7 +333,7 @@ const Home: React.FC = () => {
                         前回の値を復元
                     </button>
                 </div>
-                {/* ... (入力フォームのJSXは省略) ... */}
+
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <InputField label="保有BTC" tooltip={TOOLTIPS.initialBTC} error={errors.initialBTC}>
@@ -356,12 +347,12 @@ const Home: React.FC = () => {
                                 aria-label="保有BTC"
                             />
                         </InputField>
-                        <InputField label="取り崩し開始年" error={errors.startYear}>
+                        <InputField label="FIRE開始年" error={errors.startYear}>
                             <select
                                 value={startYear}
                                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStartYear(e.target.value)}
                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
-                                aria-label="取り崩し開始年"
+                                aria-label="FIRE開始年"
                             >
                                 {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
                                     <option key={year} value={year}>{year}年</option>
@@ -385,19 +376,19 @@ const Home: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputField label="取り崩し方法" error={errors.withdrawalRate}>
+                        <InputField label="取り崩し方法">
                             <select
                                 value={withdrawalType}
                                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setWithdrawalType(e.target.value as 'fixed' | 'percentage')}
                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                 aria-label="取り崩し方法"
                             >
-                                <option value="fixed">定額（月額）</option>
-                                <option value="percentage">定率（年率）</option>
+                                <option value="fixed">定額（毎月の生活費）</option>
+                                <option value="percentage">定率（年間資産のX%）</option>
                             </select>
                         </InputField>
                         <InputField
-                            label={withdrawalType === "fixed" ? "取り崩し額（月額、税引き後）" : "取り崩し率（年率）"}
+                            label={withdrawalType === "fixed" ? "毎月の生活費（手取り額）" : "年間取り崩し率"}
                             tooltip={withdrawalType === "fixed" ? TOOLTIPS.withdrawalAmount : TOOLTIPS.withdrawalRate}
                             error={withdrawalType === "fixed" ? errors.withdrawalAmount : errors.withdrawalRate}
                         >
@@ -409,7 +400,7 @@ const Home: React.FC = () => {
                                     className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                     placeholder={withdrawalType === "fixed" ? "例: 200000" : "例: 4"}
                                     step={withdrawalType === "fixed" ? "1000" : "0.1"}
-                                    aria-label={withdrawalType === "fixed" ? "取り崩し額（月額）" : "取り崩し率（年率）"}
+                                    aria-label={withdrawalType === "fixed" ? "毎月の生活費" : "年間取り崩し率"}
                                 />
                                 <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                     {withdrawalType === "fixed" ? "円" : "%"}
@@ -425,19 +416,19 @@ const Home: React.FC = () => {
                                 checked={showSecondPhase}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setShowSecondPhase(e.target.checked)}
                                 className="rounded bg-gray-600 focus:ring-2 focus:ring-amber-500 transition-all duration-200"
-                                aria-label="2段階目の設定を有効にする"
+                                aria-label="プラン変更のセカンドフェーズを設定する"
                             />
-                            <span className={`${typography.body} ${colors.textSecondary}`}>2段階目の設定を有効にする</span>
+                            <span className={`${typography.body} ${colors.textSecondary}`}>プラン変更のセカンドフェーズを設定する</span>
                             <TooltipIcon content={TOOLTIPS.secondPhase} />
                         </label>
                         {showSecondPhase && (
                             <div className="pl-4 space-y-4 border-l-2 border-gray-700">
-                                <InputField label="2段階目開始年" error={errors.secondPhaseYear}>
+                                <InputField label="プラン変更の開始年" error={errors.secondPhaseYear}>
                                     <select
                                         value={secondPhaseYear}
                                         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSecondPhaseYear(e.target.value)}
                                         className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
-                                        aria-label="2段階目開始年"
+                                        aria-label="プラン変更の開始年"
                                     >
                                         {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
                                             <option key={year} value={year}>{year}年</option>
@@ -445,19 +436,19 @@ const Home: React.FC = () => {
                                     </select>
                                 </InputField>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <InputField label="2段階目取り崩し方法" error={errors.secondPhaseRate}>
+                                    <InputField label="変更後の取り崩し方法">
                                         <select
                                             value={secondPhaseType}
                                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSecondPhaseType(e.target.value as 'fixed' | 'percentage')}
                                             className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
-                                            aria-label="2段階目取り崩し方法"
+                                            aria-label="変更後の取り崩し方法"
                                         >
-                                            <option value="fixed">定額（月額）</option>
-                                            <option value="percentage">定率（年率）</option>
+                                            <option value="fixed">定額（毎月の生活費）</option>
+                                            <option value="percentage">定率（年間資産のX%）</option>
                                         </select>
                                     </InputField>
                                     <InputField
-                                        label={secondPhaseType === "fixed" ? "取り崩し額（月額、税引き後）" : "取り崩し率（年率）"}
+                                        label={secondPhaseType === "fixed" ? "変更後の毎月の生活費" : "変更後の年間取り崩し率"}
                                         error={secondPhaseType === "fixed" ? errors.secondPhaseAmount : errors.secondPhaseRate}
                                     >
                                         <div className="relative">
@@ -468,7 +459,7 @@ const Home: React.FC = () => {
                                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                                                 placeholder={secondPhaseType === "fixed" ? "例: 200000" : "例: 4"}
                                                 step={secondPhaseType === "fixed" ? "1000" : "0.1"}
-                                                aria-label={secondPhaseType === "fixed" ? "2段階目取り崩し額（月額）" : "2段階目取り崩し率（年率）"}
+                                                aria-label={secondPhaseType === "fixed" ? "変更後の毎月の生活費" : "変更後の年間取り崩し率"}
                                             />
                                             <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                                                 {secondPhaseType === "fixed" ? "円" : "%"}
@@ -489,7 +480,7 @@ const Home: React.FC = () => {
                         >
                             <div className="flex items-center space-x-2">
                                 <Settings size={18} className={colors.textSecondary} />
-                                <span className={`${typography.body} ${colors.textSecondary}`}>詳細設定</span>
+                                <span className={`${typography.body} ${colors.textSecondary}`}>詳細設定（税金など）</span>
                             </div>
                             {showAdvancedOptions ? (
                                 <ChevronUp size={18} className={colors.textPrimary} />
@@ -551,7 +542,7 @@ const Home: React.FC = () => {
                                     計算中...
                                 </>
                             ) : (
-                                'シミュレーション実行'
+                                'あなたのFIREプランを計算する'
                             )}
                         </button>
                     </div>
@@ -564,14 +555,11 @@ const Home: React.FC = () => {
                 )}
             </div>
 
-            {/* ▼▼▼【重要】結果表示エリアを修正 ▼▼▼ */}
             {results.length > 0 && (
                 <div className="mt-8 space-y-6">
-                    {/* 資産推移グラフ (変更なし) */}
                     <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
-                        <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>資産推移</h2>
+                        <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>FIREプラン 結果サマリー</h2>
                         <ResponsiveContainer width="100%" height={400}>
-                            {/* ... (LineChartのコードは省略) ... */}
                             <LineChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#4A4A5A" />
                                 <XAxis dataKey="year" stroke="#e2e8f0" tick={{ fontSize: 12, fill: '#e2e8f0' }} />
@@ -607,7 +595,7 @@ const Home: React.FC = () => {
                                     formatter={(value, name) => {
                                         if (typeof name === 'string') {
                                             if (name === 'btcHeld') {
-                                                return [formatBTC(value as number, 4), '残り保有BTC'];
+                                                return [formatBTC(value as number, 4), 'BTC残高'];
                                             } else if (name === 'totalValue') {
                                                 return [formatYen(value as number, 2), '資産評価額'];
                                             }
@@ -621,7 +609,7 @@ const Home: React.FC = () => {
                                     type="monotone"
                                     dataKey="btcHeld"
                                     stroke="#34D399"
-                                    name="残り保有BTC"
+                                    name="BTC残高"
                                     dot={false}
                                 />
                                 <Line
@@ -636,7 +624,6 @@ const Home: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    {/* スマホ用ハイライト (常に表示されるが、PCではテーブルも表示される) */}
                     <SimulationHighlights
                         initialBTC={initialBTC}
                         startYear={startYear}
@@ -646,7 +633,6 @@ const Home: React.FC = () => {
                         results={results}
                     />
 
-                    {/* PCではテーブルを直接表示 */}
                     <div className="hidden md:block">
                         <SimulationResultsTable
                             results={results}
@@ -654,7 +640,6 @@ const Home: React.FC = () => {
                         />
                     </div>
 
-                    {/* スマホではアコーディオン形式でテーブルを表示 */}
                     <div className="block md:hidden">
                         <button
                             onClick={() => setShowFullTableOnMobile(!showFullTableOnMobile)}
@@ -679,12 +664,11 @@ const Home: React.FC = () => {
                 </div>
             )}
 
-            {/* ... 次のステップ、その他コンテンツへのリンク (変更なし) ... */}
             {results.length > 0 && (
                 <div className={`mt-8 ${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder} text-center`}>
-                    <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>次のステップ</h2>
+                    <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>次のステップへ</h2>
                     <p className={`${typography.body} ${colors.textMuted} mb-6 max-w-xl mx-auto`}>
-                        取り崩し計画の前に、まずは資産を築くシミュレーションを試してみませんか？毎月の積み立てが将来どれほどの価値になるかを確認できます。
+                        FIRE計画を立てる前に、まずは資産を築くシミュレーションを試してみませんか？毎月の積み立てが将来どれほどの価値になるかを確認できます。
                     </p>
                     <Link
                         to="/investment-simulator"

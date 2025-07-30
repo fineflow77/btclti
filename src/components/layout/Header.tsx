@@ -158,8 +158,11 @@ const Header: React.FC = () => {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  // 173行目
                   className={({ isActive }) =>
-                    `${colors.infoLink} transition-all duration-300 px-3 py-2 text-sm flex items-center hover:bg-gray-700/50 rounded-lg ${isActive ? 'text-[#3B82F6] font-medium border-b-2 border-[#3B82F6]' : ''
+                    `${colors.infoLink} transition-all duration-300 px-3 py-2 text-sm flex items-center hover:bg-gray-700/50 rounded-lg ${
+                    // 下線をやめて、背景色と文字色を変更するスタイルに
+                    isActive ? 'bg-gray-700/50 text-[#3B82F6] font-medium' : ''
                     }`
                   }
                 >

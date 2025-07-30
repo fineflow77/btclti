@@ -1,6 +1,6 @@
 // src/pages/Home.tsx
 
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChevronDown, ChevronUp, Settings, HelpCircle, ArrowRight, BookOpen, BrainCircuit, BarChart, TrendingUp, RotateCcw } from "lucide-react";

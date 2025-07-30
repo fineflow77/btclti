@@ -1,12 +1,13 @@
+// src/pages/InvestmentSimulator.tsx
+
 import React, { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { ChevronDown, ChevronUp, Settings, HelpCircle } from "lucide-react";
-import { formatYen, formatBTC } from '../../utils/formatters'; // formatPercentage削除
-import { DEFAULTS, CURRENT_YEAR, PriceModel } from '../../utils/constants';
-import { useInvestmentSimulation, SimulationInputs } from '../../hooks/useInvestmentSimulation';
-import LoadingSpinner from '../ui/LoadingSpinner';
+import { formatYen, formatBTC } from '../utils/formatters';
+import { DEFAULTS, CURRENT_YEAR, PriceModel } from '../utils/constants';
+import { useInvestmentSimulation, SimulationInputs } from '../hooks/useInvestmentSimulation';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
-// Home.tsx から借用したスタイル（変更なし）
 const typography = {
     h1: 'text-3xl sm:text-4xl font-extrabold tracking-tight',
     h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
@@ -26,7 +27,6 @@ const colors = {
     textMuted: 'text-gray-400',
 };
 
-// ツールチップアイコンコンポーネント（変更なし）
 const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
     <div className="group relative inline-block ml-2">
         <HelpCircle className="h-4 w-4 text-gray-400 hover:text-gray-300 cursor-help transition-colors duration-200" />
@@ -36,7 +36,6 @@ const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
     </div>
 );
 
-// インプットフィールドコンポーネント（変更なし）
 const InputField: React.FC<{
     label: string;
     tooltip?: React.ReactNode;
@@ -202,7 +201,7 @@ const InvestmentSimulator: React.FC = () => {
                         <InputField label="価格予測モデル" tooltip={TOOLTIPS.priceModel}>
                             <select
                                 value={priceModel}
-                                onChange={(e) => setPriceModel(e.target.value as PriceModel)} // PriceModelにキャスト
+                                onChange={(e) => setPriceModel(e.target.value as PriceModel)}
                                 className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
                             >
                                 <option value={PriceModel.STANDARD}>標準モデル</option>

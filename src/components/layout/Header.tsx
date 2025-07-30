@@ -1,8 +1,8 @@
 // src/components/layout/Header.tsx
+
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Info, Wallet, BarChart2, Newspaper, ChevronDown, ChevronRight } from 'lucide-react';
-import { ChartLineUp } from 'phosphor-react';
+import { Menu, X, Info, Wallet, BarChart2, Newspaper, ChevronDown, ChevronRight, Home, TrendingUp } from 'lucide-react';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const colors = {
@@ -37,13 +37,15 @@ const Header: React.FC = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
   const navItems: NavItem[] = [
+    { to: '/', label: 'ホーム', icon: <Home className="h-4 w-4 mr-2" /> },
+    { to: '/dashboard', label: 'ダッシュボード', icon: <TrendingUp className="h-4 w-4 mr-2" /> },
     {
       to: '#',
       label: 'シミュレーター',
       icon: <BarChart2 className="h-4 w-4 mr-2" />,
       children: [
-        { to: '/simulators/investment', label: '積み立てシミュレーター', icon: <ChartLineUp className="h-4 w-4 mr-2" /> },
-        { to: '/simulators/withdrawal', label: '取り崩しシミュレーター', icon: <Wallet className="h-4 w-4 mr-2" /> },
+        { to: '/investment-simulator', label: '積み立て', icon: <BarChart2 className="h-4 w-4 mr-2" /> },
+        { to: '/', label: '取り崩し', icon: <Wallet className="h-4 w-4 mr-2" /> },
       ],
     },
     {
@@ -52,17 +54,15 @@ const Header: React.FC = () => {
       icon: <Info className="h-4 w-4 mr-2" />,
       children: [
         { to: '/bitcoin-basics', label: 'ビットコイン投資の基礎', icon: <Info className="h-4 w-4 mr-2" /> },
-        { to: '/power-law-explanation', label: 'パワーロー解説', icon: <Info className="h-4 w-4 mr-2" /> },
+        { to: '/power-law', label: 'パワーロー解説', icon: <Info className="h-4 w-4 mr-2" /> },
         { to: '/analysis-news', label: '価格分析', icon: <Newspaper className="h-4 w-4 mr-2" /> },
       ],
     },
-
   ];
 
   return (
     <header className="bg-[#1a202c]/80 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-[#2c333e]/50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        {/* ロゴ */}
         <NavLink
           to="/"
           className="flex items-center hover:opacity-90 transition-opacity duration-300"
@@ -75,7 +75,6 @@ const Header: React.FC = () => {
           </div>
         </NavLink>
 
-        {/* ナビゲーション */}
         {isMobile ? (
           <div className="relative">
             <button
@@ -86,7 +85,6 @@ const Header: React.FC = () => {
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
-
             {isMobileMenuOpen && (
               <nav className="absolute right-0 mt-2 bg-[#1a202c]/95 backdrop-blur-md rounded-lg shadow-xl w-64 z-50 overflow-hidden border ${colors.border} animate-slideDown">
                 {navItems.map((item) =>
@@ -177,6 +175,7 @@ const Header: React.FC = () => {
   );
 };
 
+// CSS in JS for animations to avoid separate CSS file
 const globalStyles = `
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }

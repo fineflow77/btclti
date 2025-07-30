@@ -1,338 +1,650 @@
 // src/pages/Home.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useMemo, useCallback } from "react";
 import { Link } from 'react-router-dom';
-import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
-import { useBitcoinData } from '../hooks/useBitcoinData';
-import PowerLawChartWrapper from '../components/charts/PowerLawChartWrapper';
-import { formatCurrency } from '../utils/formatters';
-import { getPowerLawPositionLabel, getPowerLawPositionColor } from '../utils/models';
-import { calculateRSquared } from '../utils/mathUtils';
-import DataContainer from '../components/ui/DataContainer';
-import { ChartLineUp, Wallet as PhosphorWallet } from 'phosphor-react';
-import { BitcoinData, PowerLawDataPoint, WeeklyPrice, DailyPrice } from '../types';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { ChevronDown, ChevronUp, Settings, HelpCircle, ArrowRight, BookOpen, BrainCircuit, BarChart, TrendingUp } from "lucide-react";
+import { formatYen, formatBTC, formatPercentage } from '../utils/formatters';
+import { DEFAULTS, CURRENT_YEAR, PriceModel } from '../utils/constants';
+import { useWithdrawalSimulation, WithdrawalInputs } from '../hooks/useWithdrawalSimulation';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
-// タイポグラフィと色の定義は変更なし
-const typography: Record<string, string> = {
-  h1: 'text-2xl sm:text-3xl font-semibold tracking-tight',
-  h2: 'text-xl sm:text-2xl font-medium',
-  subtitle: 'text-base sm:text-lg font-medium',
-  body: 'text-sm sm:text-base font-normal',
-  tiny: 'text-xs sm:text-sm font-normal',
-  small: 'text-xs sm:text-sm font-normal',
+// スタイル定義
+const typography = {
+    h1: 'text-3xl sm:text-4xl font-extrabold tracking-tight',
+    h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
+    h3: 'text-lg sm:text-xl font-medium',
+    body: 'text-sm sm:text-base font-normal',
+    small: 'text-xs sm:text-sm font-normal',
 };
 
-const colors: Record<string, string> = {
-  primary: 'bg-[#3B82F6] hover:bg-[#2b6cb0] text-white',
-  cardBg: 'bg-gray-800',
-  cardBorder: 'border border-gray-700',
-  textPrimary: 'text-gray-100',
-  textSecondary: 'text-gray-300',
-  textMuted: 'text-gray-400',
-  amber: 'text-[#D4AF37]',
-  green: 'text-[#10B981]',
-  pink: 'text-[#FF69B4]',
-  tabActive: 'bg-[#3B82F6] text-white',
-  tabInactive: 'bg-gray-700 text-gray-300',
-  investmentCardBg: 'bg-gradient-to-br from-[#3B82F6] to-[#2b6cb0]',
-  withdrawalCardBg: 'bg-gradient-to-br from-[#10B981] to-[#065f46]',
-  cardBorderHighlight: 'border border-gray-600 hover:border-[#3B82F6]',
+const colors = {
+    primary: 'bg-green-500 hover:bg-green-600 text-white',
+    secondary: 'bg-blue-500 hover:bg-blue-600 text-white',
+    accent: 'bg-amber-500 hover:bg-amber-600 text-white',
+    cardBg: 'bg-gray-800',
+    cardBorder: 'border border-gray-700',
+    textPrimary: 'text-gray-100',
+    textSecondary: 'text-gray-300',
+    textMuted: 'text-gray-400',
+    error: 'text-red-500',
+    success: 'text-green-400',
 };
 
-const Home: React.FC = () => {
-  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData() as BitcoinData;
-  const [rSquared, setRSquared] = useState<number>(0.9703);
-  const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('loglog'); // Default to 'loglog' (Log Scale)
-
-  // useEffect, useMemo hooks are unchanged
-  useEffect(() => {
-    if (weeklyPrices && weeklyPrices.length > 0) {
-      const calculatedRSquared = calculateRSquared(
-        weeklyPrices.map((item: WeeklyPrice) => [new Date(item.date).getTime(), item.price])
-      );
-      if (calculatedRSquared !== null) setRSquared(calculatedRSquared);
-    }
-  }, [weeklyPrices]);
-
-  const priceChangePercentage = useMemo(() => {
-    if (!currentPrice || !dailyPrices || dailyPrices.length < 2) return null;
-    const sortedPrices = [...dailyPrices].sort(
-      (a: DailyPrice, b: DailyPrice) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    if (sortedPrices.length < 2 || !currentPrice.prices.usd) return null;
-    const latestPrice = currentPrice.prices.usd;
-    const yesterdayPrice = sortedPrices[1].price;
-    return ((latestPrice - yesterdayPrice) / yesterdayPrice) * 100;
-  }, [currentPrice, dailyPrices]);
-
-  const { medianPrice, supportPrice } = useMemo(() => {
-    if (!powerLawData || powerLawData.length === 0) return { medianPrice: 0, supportPrice: 0 };
-    const now = Date.now();
-    const closestPoint = powerLawData.reduce(
-      (closest: PowerLawDataPoint, current: PowerLawDataPoint) => {
-        const currentDiff = Math.abs(current.date - now);
-        const closestDiff = Math.abs(closest.date - now);
-        return currentDiff < closestDiff ? current : closest;
-      },
-      powerLawData[0]
-    );
-    return { medianPrice: closestPoint.medianModel, supportPrice: closestPoint.supportModel };
-  }, [powerLawData]);
-
-  const medianDeviation = useMemo(() => {
-    if (!currentPrice || !medianPrice) return null;
-    return ((currentPrice.prices.usd - medianPrice) / medianPrice) * 100;
-  }, [currentPrice, medianPrice]);
-
-  const supportDeviation = useMemo(() => {
-    if (!currentPrice || !supportPrice) return null;
-    return ((currentPrice.prices.usd - supportPrice) / supportPrice) * 100;
-  }, [currentPrice, supportPrice]);
-
-  const chartDataToUse = powerLawData || [];
-
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
-      {/* space-y-12 for section spacing */}
-      <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-
-        {/* --- Price Information Section --- */}
-        <div className="space-y-6"> {/* Spacing between card grid and exchange rate info */}
-          {/* Price Card Grid - Optimized for vertical display on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-            {/* Current Price Card - Optimized for vertical display */}
-            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <div className="flex justify-between items-center mb-1 sm:mb-3">
-                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.amber} flex items-center`}>
-                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" /> 現在価格
-                </h3>
-                {priceChangePercentage !== null && (
-                  <div className={`text-xs font-medium ${priceChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {priceChangePercentage >= 0 ? '+' : ''}{priceChangePercentage.toFixed(1)}%
-                  </div>
-                )}
-              </div>
-              <DataContainer
-                isLoading={loading}
-                error={error}
-                loadingMessage="価格データ取得中..."
-                noDataMessage="価格データが利用できません"
-              >
-                {currentPrice && currentPrice.prices.usd ? (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xl sm:text-3xl font-bold text-[#D4AF37]">
-                        {formatCurrency(currentPrice.prices.jpy, 'JPY')}
-                      </div>
-                      <div className={`${typography.tiny} ${colors.textMuted}`}>
-                        ({formatCurrency(currentPrice.prices.usd, 'USD')})
-                      </div>
-                    </div>
-                    {medianDeviation !== null && (
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-opacity-20`}
-                        style={{
-                          backgroundColor: `${getPowerLawPositionColor(medianDeviation, supportDeviation)}20`,
-                          color: getPowerLawPositionColor(medianDeviation, supportDeviation),
-                        }}
-                      >
-                        {getPowerLawPositionLabel(medianDeviation, supportDeviation)}
-                      </span>
-                    )}
-                  </div>
-                ) : null}
-              </DataContainer>
-            </div>
-
-            {/* Median Price Card - Optimized for vertical display */}
-            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <div className="flex justify-between items-center mb-1 sm:mb-3">
-                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.green} flex items-center`}>
-                  中央価格（予測）
-                </h3>
-                {medianDeviation !== null && (
-                  <div className={`text-xs font-medium ${medianDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    乖離: {medianDeviation >= 0 ? '+' : ''}{medianDeviation.toFixed(1)}%
-                  </div>
-                )}
-              </div>
-              <DataContainer
-                isLoading={loading}
-                error={error}
-                loadingMessage="価格データ取得中..."
-                noDataMessage="中央価格データが利用できません"
-              >
-                {powerLawData && powerLawData.length > 0 ? (
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-xl sm:text-2xl font-semibold text-[#10B981]">
-                        {formatCurrency(medianPrice * exchangeRate, 'JPY')}
-                      </div>
-                      <div className={`${typography.tiny} ${colors.textMuted}`}>
-                        ({formatCurrency(medianPrice, 'USD')})
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </DataContainer>
-            </div>
-
-            {/* Lower Bound Price Card - Optimized for vertical display */}
-            <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
-              <div className="flex justify-between items-center mb-1 sm:mb-3">
-                <h3 className={`${typography.small} sm:${typography.subtitle} ${colors.pink} flex items-center`}>
-                  下限価格（予測）
-                </h3>
-                {supportDeviation !== null && (
-                  <div className={`text-xs font-medium ${supportDeviation >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    乖離: {supportDeviation >= 0 ? '+' : ''}{supportDeviation.toFixed(1)}%
-                  </div>
-                )}
-              </div>
-              <DataContainer
-                isLoading={loading}
-                error={error}
-                loadingMessage="価格データ取得中..."
-                noDataMessage="下限価格データが利用できません"
-              >
-                {powerLawData && powerLawData.length > 0 ? (
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-xl sm:text-2xl font-semibold text-[#FF69B4]">
-                        {formatCurrency(supportPrice * exchangeRate, 'JPY')}
-                      </div>
-                      <div className={`${typography.tiny} ${colors.textMuted}`}>
-                        ({formatCurrency(supportPrice, 'USD')})
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </DataContainer>
-            </div>
-          </div>
-
-          {/* Exchange Rate and Last Updated */}
-          <div className="flex justify-between items-center bg-gray-800/30 backdrop-blur-sm rounded-lg p-4 shadow-md">
-            <div className={`${typography.small} ${colors.textMuted}`}>
-              為替レート: {formatCurrency(exchangeRate, 'JPY', { maxDecimals: 2 }).replace('¥', '')}円/USD
-            </div>
-            <div className={`${typography.small} ${colors.textMuted}`}>
-              {currentPrice && (
-                <span>
-                  最終更新: {new Date(currentPrice.timestamp).toLocaleString('ja-JP', { timeStyle: 'short' })}
-                </span>
-              )}
-            </div>
-          </div>
+// ツールチップアイコンコンポーネント
+const TooltipIcon: React.FC<{ content: React.ReactNode }> = ({ content }) => (
+    <div className="group relative inline-block ml-2">
+        <HelpCircle
+            className="h-4 w-4 text-gray-400 hover:text-gray-300 cursor-help transition-colors duration-200"
+            aria-label="ツールチップ"
+        />
+        <div className="invisible group-hover:visible absolute z-10 w-64 p-2 mt-2 text-sm text-gray-300 bg-gray-800 rounded-lg shadow-lg -translate-x-1/2 left-1/2">
+            {content}
         </div>
-        {/* --- Price Information Section End --- */}
-
-
-        {/* --- Main: Tabbed Power Law Chart --- */}
-        {/* mt-12 removed */}
-        <div>
-          <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-4`}>パワーローチャート</h1>
-          <div className="flex justify-center mb-2 space-x-10">
-            <button
-              onClick={() => setActiveTab('loglog')} // 'loglog' (Log Scale) button
-              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'loglog' ? colors.tabActive : colors.tabInactive
-                } hover:bg-gray-700/50`}
-            >
-              logスケール
-            </button>
-            <button
-              onClick={() => setActiveTab('log')} // 'log' (Log-Log Scale) button
-              className={`px-6 py-2 ${typography.subtitle} rounded-full transition-all duration-300 ${activeTab === 'log' ? colors.tabActive : colors.tabInactive
-                } hover:bg-gray-700/50`}
-            >
-              log-logスケール
-            </button>
-          </div>
-          <div className="relative rounded-2xl ${colors.cardBorder} overflow-hidden shadow-lg"> {/* relative added */}
-            <DataContainer
-              isLoading={loading}
-              error={error}
-              loadingMessage="チャートデータ取得中..."
-              noDataMessage="チャートデータがありません"
-            >
-              <PowerLawChartWrapper
-                rSquared={rSquared}
-                chartData={chartDataToUse}
-                exchangeRate={exchangeRate || 1}
-                currentPrice={currentPrice?.prices.usd}
-                height={500}
-                isLogScale={activeTab === 'log'} // isLogScale は 'log' の時に true (修正)
-              />
-            </DataContainer>
-
-          </div>
-          <div className="mt-6 text-center">
-            <Link
-              to="/power-law-explanation"
-              className="text-[#3B82F6] hover:text-[#2b6cb0] text-sm font-medium inline-flex items-center group"
-            >
-              パワーローについて詳しく学ぶ{' '}
-              <span className="ml-1 transition-transform duration-200 group-hover:translate-x-1">
-                →
-              </span>
-            </Link>
-          </div>
-        </div>
-        {/* --- Main: Tabbed Power Law Chart End --- */}
-
-
-        {/* --- Simulator Links --- */}
-        {/* mt-12 removed */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link
-            to="/simulators/investment"
-            className={`${colors.investmentCardBg} p-6 rounded-2xl shadow-lg flex items-center justify-between transition-transform duration-300 hover:scale-105 hover:shadow-xl ${colors.cardBorderHighlight}`}
-          >
-            <div>
-              <h3 className={`${typography.h2} ${colors.textPrimary} mb-2 flex items-center`}>
-                <ChartLineUp className="h-6 w-6 mr-2" />
-                積み立てシミュレーター
-              </h3>
-              <p className={`${typography.body} ${colors.textSecondary}`}>
-                毎月一定額を投資した場合の将来価値をシミュレーションできます。
-              </p>
-            </div>
-            <ArrowUpRight className="h-6 w-6 text-white" />
-          </Link>
-          <Link
-            to="/simulators/withdrawal"
-            className={`${colors.withdrawalCardBg} p-6 rounded-2xl shadow-lg flex items-center justify-between transition-transform duration-300 hover:scale-105 hover:shadow-xl ${colors.cardBorderHighlight}`}
-          >
-            <div>
-              <h3 className={`${typography.h2} ${colors.textPrimary} mb-2 flex items-center`}>
-                <PhosphorWallet className="h-6 w-6 mr-2" />
-                取り崩しシミュレーター
-              </h3>
-              <p className={`${typography.body} ${colors.textSecondary}`}>
-                資産を取り崩しながら運用した場合のシミュレーションができます。
-              </p>
-            </div>
-            <ArrowUpRight className="h-6 w-6 text-white" />
-          </Link>
-        </div>
-        {/* --- Simulator Links End --- */}
-
-
-        {/* --- Analysis News Link --- */}
-        <div className="text-center">
-          <Link
-            to="/analysis-news"
-            className={`bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-full text-sm font-medium inline-flex items-center transition-colors text-white`}
-          >
-            詳細な価格分析を見る
-            <Info className="ml-2 h-4 w-4" />
-          </Link>
-        </div>
-        {/* --- Analysis News Link End --- */}
-
-      </div>
     </div>
-  );
+);
+
+// インプットフィールドコンポーネント
+const InputField: React.FC<{
+    label: string;
+    tooltip?: React.ReactNode;
+    error?: string;
+    children: React.ReactNode;
+}> = ({ label, tooltip, error, children }) => (
+    <div className="mb-4">
+        <div className="flex items-center mb-1">
+            <label className={`${typography.body} ${colors.textSecondary}`}>{label}</label>
+            {tooltip && <TooltipIcon content={tooltip} />}
+        </div>
+        {children}
+        {error && <p className={`${colors.error} text-xs mt-1`}>{error}</p>}
+    </div>
+);
+
+// ツールチップの内容
+const TOOLTIPS = {
+    initialBTC: "現在保有しているビットコインの量を入力してください。",
+    withdrawalAmount: "毎月の生活費として必要な金額を入力してください。税引き後の手取り額として計算されます。",
+    withdrawalRate: "資産からの年間取り崩し率を指定します。一般的なFIREでは4%が目安とされています。",
+    secondPhase: "特定の年から取り崩し方法や金額を変更できます。退職後の生活スタイルの変化などに対応します。",
+    taxRate: "利益に対する税率を設定します。デフォルトは確定申告を行った場合の税率です。",
+    exchangeRate: "円ドルの為替レートを設定します。",
+    inflationRate: "年間の物価上昇率を設定します。",
+    priceModel: (
+        <>
+            <p>ビットコインの価格予測に使用するモデルです。どちらのモデルも「パワーロー」という統計法則に基づいています。</p>
+            <p className="mt-2"><b>標準モデル：</b>ビットコインが世界的な基軸通貨になるシナリオ。</p>
+            <p className="mt-1"><b>保守的モデル：</b>ビットコインが金（ゴールド）のような価値の保存手段になるシナリオ。</p>
+            <Link to="/power-law" className="text-amber-400 hover:underline mt-3 block font-semibold">
+                パワーローモデルについて詳しくはこちら »
+            </Link>
+        </>
+    ),
+};
+
+// シミュレーション結果のハイライトコンポーネント
+const SimulationHighlights: React.FC<{
+    initialBTC: string;
+    startYear: string;
+    withdrawalType: 'fixed' | 'percentage';
+    withdrawalAmount: string;
+    withdrawalRate: string;
+    results: any[];
+}> = ({ initialBTC, startYear, withdrawalType, withdrawalAmount, withdrawalRate, results }) => {
+    const zeroIndex = results.findIndex(r => r.remainingBTC <= 0);
+    const zeroYear = zeroIndex !== -1 ? results[zeroIndex].year : null;
+    const fiveYearsLaterValue = results.find(r => r.year === CURRENT_YEAR + 5)?.totalValue || 0;
+
+    return (
+        <div className={`block md:hidden ${colors.cardBg} p-4 rounded-xl shadow-md space-y-3`}>
+            <h3 className={`${typography.h3} ${colors.textPrimary} mb-2`}>ハイライト</h3>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>BTC初期保有量</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {formatBTC(parseFloat(initialBTC) || 0, 4)}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>取り崩し開始年</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>{startYear}年</div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>
+                    {withdrawalType === "fixed" ? "月額取り崩し" : "年間取り崩し率"}
+                </div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {withdrawalType === "fixed"
+                        ? formatYen(parseFloat(withdrawalAmount) || 0, 2)
+                        : formatPercentage(parseFloat(withdrawalRate) || 0, { decimals: 2 })}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>資金寿命</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {zeroYear
+                        ? `${zeroYear}年（${zeroYear - parseInt(startYear)}年間）`
+                        : "2050年以降も維持"}
+                </div>
+            </div>
+            <div className="bg-gray-700 p-3 rounded-md">
+                <div className={`${typography.small} ${colors.textMuted}`}>5年後の資産評価額</div>
+                <div className={`${typography.body} ${colors.textPrimary}`}>
+                    {formatYen(fiveYearsLaterValue, 2)}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// シミュレーション結果テーブルコンポーネント
+const SimulationResultsTable: React.FC<{
+    results: any[];
+    showSecondPhase: boolean;
+}> = ({ results, showSecondPhase }) => (
+    <div className={`hidden md:block ${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
+        <div className="flex justify-between mb-4">
+            <h3 className={`${typography.h3} ${colors.textPrimary}`}>シミュレーション結果</h3>
+        </div>
+        <div className="overflow-x-auto -mx-6 px-6">
+            <table className="min-w-full divide-y divide-gray-700">
+                <thead className="bg-gray-700">
+                    <tr>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC価格</th>
+                        {showSecondPhase && (
+                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>段階</th>
+                        )}
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し率</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し額</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩しBTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>残り保有BTC</th>
+                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>資産評価額</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                    {results.map((result) => (
+                        <tr key={result.year} className={result.year % 2 === 0 ? "bg-gray-800" : "bg-gray-750 hover:bg-gray-700 transition-colors duration-200"}>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.year}</td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatYen(result.btcPrice, 2)}</td>
+                            {showSecondPhase && (
+                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.phase}</td>
+                            )}
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalRate === 'number'
+                                    ? formatPercentage(result.withdrawalRate, { decimals: 2 })
+                                    : result.withdrawalRate}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalAmount === 'number'
+                                    ? formatYen(result.withdrawalAmount, 2)
+                                    : result.withdrawalAmount}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {typeof result.withdrawalBTC === 'number'
+                                    ? formatBTC(result.withdrawalBTC, 4)
+                                    : result.withdrawalBTC}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {formatBTC(result.remainingBTC, 4)}
+                            </td>
+                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
+                                {formatYen(result.totalValue, 2)}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+);
+
+// メインコンポーネント
+const Home: React.FC = () => {
+    const [initialBTC, setInitialBTC] = useState("");
+    const [startYear, setStartYear] = useState("2025");
+    const [priceModel, setPriceModel] = useState<PriceModel>(PriceModel.STANDARD);
+    const [withdrawalType, setWithdrawalType] = useState<'fixed' | 'percentage'>("fixed");
+    const [withdrawalAmount, setWithdrawalAmount] = useState("");
+    const [withdrawalRate, setWithdrawalRate] = useState("4");
+    const [showSecondPhase, setShowSecondPhase] = useState(false);
+    const [secondPhaseYear, setSecondPhaseYear] = useState("2030");
+    const [secondPhaseType, setSecondPhaseType] = useState<'fixed' | 'percentage'>("fixed");
+    const [secondPhaseAmount, setSecondPhaseAmount] = useState("");
+    const [secondPhaseRate, setSecondPhaseRate] = useState("4");
+    const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [taxRate, setTaxRate] = useState(DEFAULTS.TAX_RATE.toString());
+    const [exchangeRate, setExchangeRate] = useState(DEFAULTS.EXCHANGE_RATE.toString());
+    const [inflationRate, setInflationRate] = useState(DEFAULTS.INFLATION_RATE.toString());
+    const [isCalculating, setIsCalculating] = useState(false);
+
+    const { results, errors, simulate } = useWithdrawalSimulation();
+
+    const runSimulation = useCallback(() => {
+        setIsCalculating(true);
+        const inputs: WithdrawalInputs = {
+            initialBTC,
+            startYear,
+            priceModel,
+            withdrawalType,
+            withdrawalAmount,
+            withdrawalRate,
+            showSecondPhase,
+            secondPhaseYear,
+            secondPhaseType,
+            secondPhaseAmount,
+            secondPhaseRate,
+            taxRate,
+            exchangeRate,
+            inflationRate,
+        };
+        setTimeout(() => {
+            simulate(inputs);
+            setIsCalculating(false);
+        }, 500);
+    }, [
+        initialBTC,
+        startYear,
+        priceModel,
+        withdrawalType,
+        withdrawalAmount,
+        withdrawalRate,
+        showSecondPhase,
+        secondPhaseYear,
+        secondPhaseType,
+        secondPhaseAmount,
+        secondPhaseRate,
+        taxRate,
+        exchangeRate,
+        inflationRate,
+        simulate,
+    ]);
+
+    const chartData = useMemo(() => {
+        if (results.length > 0) {
+            return results.map(result => ({
+                year: result.year,
+                btcHeld: result.remainingBTC,
+                totalValue: result.totalValue,
+            }));
+        }
+        return [];
+    }, [results]);
+
+    return (
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-gray-900 text-gray-100 space-y-8">
+            {/* ▼▼▼ ナビゲーションセクションを追加 ▼▼▼ */}
+            <div className="text-center">
+                <h1 className={`${typography.h1} ${colors.textPrimary} mb-4`}>
+                    <span className="bg-gradient-to-r from-blue-400 to-green-500 bg-clip-text text-transparent">
+                        ビットコイン FIREシミュレーター
+                    </span>
+                </h1>
+                <p className={`${typography.body} ${colors.textSecondary} max-w-3xl mx-auto mb-8`}>
+                    あなたのビットコイン資産が将来もたらす可能性を可視化します。
+                    まずは、将来の資産を取り崩して生活する「取り崩しシミュレーション」から始めましょう。
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 max-w-5xl mx-auto">
+                    <Link to="/investment-simulator" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg transition-colors flex items-center space-x-3 text-left shadow-md">
+                        <BarChart className="h-8 w-8 text-green-400 flex-shrink-0" />
+                        <div>
+                            <p className={`${typography.h3} ${colors.textPrimary}`}>積み立て</p>
+                            <p className={`${typography.small} ${colors.textMuted}`}>資産を築く計画を立てる</p>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
+                    </Link>
+                    <Link to="/dashboard" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg transition-colors flex items-center space-x-3 text-left shadow-md">
+                        <TrendingUp className="h-8 w-8 text-amber-400 flex-shrink-0" />
+                        <div>
+                            <p className={`${typography.h3} ${colors.textPrimary}`}>ダッシュボード</p>
+                            <p className={`${typography.small} ${colors.textMuted}`}>現在の価格状況を見る</p>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
+                    </Link>
+                    <Link to="/power-law" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg transition-colors flex items-center space-x-3 text-left shadow-md">
+                        <BrainCircuit className="h-8 w-8 text-blue-400 flex-shrink-0" />
+                        <div>
+                            <p className={`${typography.h3} ${colors.textPrimary}`}>パワーロー</p>
+                            <p className={`${typography.small} ${colors.textMuted}`}>価格予測の根拠を知る</p>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
+                    </Link>
+                    <Link to="/basics" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg transition-colors flex items-center space-x-3 text-left shadow-md">
+                        <BookOpen className="h-8 w-8 text-purple-400 flex-shrink-0" />
+                        <div>
+                            <p className={`${typography.h3} ${colors.textPrimary}`}>基礎知識</p>
+                            <p className={`${typography.small} ${colors.textMuted}`}>ビットコインを学ぶ</p>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-gray-400 ml-auto" />
+                    </Link>
+                </div>
+            </div>
+            {/* ▲▲▲ ここまで追加 ▲▲▲ */}
+
+            <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
+                <h2 className={`${typography.h2} ${colors.textPrimary} mb-6 text-center`}>
+                    取り崩しシミュレーション
+                </h2>
+
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField label="保有BTC" tooltip={TOOLTIPS.initialBTC} error={errors.initialBTC}>
+                            <input
+                                type="number"
+                                value={initialBTC}
+                                onChange={(e) => setInitialBTC(e.target.value)}
+                                className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                step="0.00000001"
+                                placeholder="例: 0.1"
+                                aria-label="保有BTC"
+                            />
+                        </InputField>
+                        <InputField label="取り崩し開始年" error={errors.startYear}>
+                            <select
+                                value={startYear}
+                                onChange={(e) => setStartYear(e.target.value)}
+                                className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                aria-label="取り崩し開始年"
+                            >
+                                {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
+                                    <option key={year} value={year}>{year}年</option>
+                                ))}
+                            </select>
+                        </InputField>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField label="価格予測モデル" tooltip={TOOLTIPS.priceModel}>
+                            <select
+                                value={priceModel}
+                                onChange={(e) => setPriceModel(e.target.value as PriceModel)}
+                                className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                aria-label="価格予測モデル"
+                            >
+                                <option value={PriceModel.STANDARD}>標準モデル</option>
+                                <option value={PriceModel.CONSERVATIVE}>保守的モデル</option>
+                            </select>
+                        </InputField>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputField label="取り崩し方法" error={errors.withdrawalRate}>
+                            <select
+                                value={withdrawalType}
+                                onChange={(e) => setWithdrawalType(e.target.value as 'fixed' | 'percentage')}
+                                className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                aria-label="取り崩し方法"
+                            >
+                                <option value="fixed">定額（月額）</option>
+                                <option value="percentage">定率（年率）</option>
+                            </select>
+                        </InputField>
+                        <InputField
+                            label={withdrawalType === "fixed" ? "取り崩し額（月額、税引き後）" : "取り崩し率（年率）"}
+                            tooltip={withdrawalType === "fixed" ? TOOLTIPS.withdrawalAmount : TOOLTIPS.withdrawalRate}
+                            error={withdrawalType === "fixed" ? errors.withdrawalAmount : errors.withdrawalRate}
+                        >
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={withdrawalType === "fixed" ? withdrawalAmount : withdrawalRate}
+                                    onChange={(e) => withdrawalType === "fixed" ? setWithdrawalAmount(e.target.value) : setWithdrawalRate(e.target.value)}
+                                    className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                    placeholder={withdrawalType === "fixed" ? "例: 200000" : "例: 4"}
+                                    step={withdrawalType === "fixed" ? "1000" : "0.1"}
+                                    aria-label={withdrawalType === "fixed" ? "取り崩し額（月額）" : "取り崩し率（年率）"}
+                                />
+                                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    {withdrawalType === "fixed" ? "円" : "%"}
+                                </span>
+                            </div>
+                        </InputField>
+                    </div>
+
+                    <div className="mt-4">
+                        <label className="flex items-center space-x-2 text-gray-300 mb-2">
+                            <input
+                                type="checkbox"
+                                checked={showSecondPhase}
+                                onChange={(e) => setShowSecondPhase(e.target.checked)}
+                                className="rounded bg-gray-600 focus:ring-2 focus:ring-amber-500 transition-all duration-200"
+                                aria-label="2段階目の設定を有効にする"
+                            />
+                            <span className={`${typography.body} ${colors.textSecondary}`}>2段階目の設定を有効にする</span>
+                            <TooltipIcon content={TOOLTIPS.secondPhase} />
+                        </label>
+                        {showSecondPhase && (
+                            <div className="pl-4 space-y-4 border-l-2 border-gray-700">
+                                <InputField label="2段階目開始年" error={errors.secondPhaseYear}>
+                                    <select
+                                        value={secondPhaseYear}
+                                        onChange={(e) => setSecondPhaseYear(e.target.value)}
+                                        className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                        aria-label="2段階目開始年"
+                                    >
+                                        {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
+                                            <option key={year} value={year}>{year}年</option>
+                                        ))}
+                                    </select>
+                                </InputField>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <InputField label="2段階目取り崩し方法" error={errors.secondPhaseRate}>
+                                        <select
+                                            value={secondPhaseType}
+                                            onChange={(e) => setSecondPhaseType(e.target.value as 'fixed' | 'percentage')}
+                                            className="w-full bg-gray-700 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                            aria-label="2段階目取り崩し方法"
+                                        >
+                                            <option value="fixed">定額（月額）</option>
+                                            <option value="percentage">定率（年率）</option>
+                                        </select>
+                                    </InputField>
+                                    <InputField
+                                        label={secondPhaseType === "fixed" ? "取り崩し額（月額、税引き後）" : "取り崩し率（年率）"}
+                                        error={secondPhaseType === "fixed" ? errors.secondPhaseAmount : errors.secondPhaseRate}
+                                    >
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={secondPhaseType === "fixed" ? secondPhaseAmount : secondPhaseRate}
+                                                onChange={(e) => secondPhaseType === "fixed" ? setSecondPhaseAmount(e.target.value) : setSecondPhaseRate(e.target.value)}
+                                                className="w-full bg-gray-700 p-2 rounded-md text-gray-100 pr-12 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                                placeholder={secondPhaseType === "fixed" ? "例: 200000" : "例: 4"}
+                                                step={secondPhaseType === "fixed" ? "1000" : "0.1"}
+                                                aria-label={secondPhaseType === "fixed" ? "2段階目取り崩し額（月額）" : "2段階目取り崩し率（年率）"}
+                                            />
+                                            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                                {secondPhaseType === "fixed" ? "円" : "%"}
+                                            </span>
+                                        </div>
+                                    </InputField>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-4">
+                        <button
+                            className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${showAdvancedOptions ? 'bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`}
+                            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                            aria-expanded={showAdvancedOptions}
+                            aria-controls="advanced-options"
+                        >
+                            <div className="flex items-center space-x-2">
+                                <Settings size={18} className={colors.textSecondary} />
+                                <span className={`${typography.body} ${colors.textSecondary}`}>詳細設定</span>
+                            </div>
+                            {showAdvancedOptions ? (
+                                <ChevronUp size={18} className={colors.textPrimary} />
+                            ) : (
+                                <ChevronDown size={18} className={colors.textSecondary} />
+                            )}
+                        </button>
+                        {showAdvancedOptions && (
+                            <div id="advanced-options" className="mt-4 space-y-4 p-4 bg-gray-700 rounded-md">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <InputField label="税率 (%)" tooltip={TOOLTIPS.taxRate} error={errors.taxRate}>
+                                        <input
+                                            type="number"
+                                            value={taxRate}
+                                            onChange={(e) => setTaxRate(e.target.value)}
+                                            className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                            step="0.1"
+                                            placeholder="例: 20.315"
+                                            aria-label="税率"
+                                        />
+                                    </InputField>
+                                    <InputField label="為替レート (円/USD)" tooltip={TOOLTIPS.exchangeRate} error={errors.exchangeRate}>
+                                        <input
+                                            type="number"
+                                            value={exchangeRate}
+                                            onChange={(e) => setExchangeRate(e.target.value)}
+                                            className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                            step="0.1"
+                                            placeholder="例: 150"
+                                            aria-label="為替レート"
+                                        />
+                                    </InputField>
+                                    <InputField label="インフレ率 (%)" tooltip={TOOLTIPS.inflationRate} error={errors.inflationRate}>
+                                        <input
+                                            type="number"
+                                            value={inflationRate}
+                                            onChange={(e) => setInflationRate(e.target.value)}
+                                            className="w-full bg-gray-600 p-2 rounded-md text-gray-100 focus:ring-2 focus:ring-amber-500 focus:outline-none transition-all duration-200"
+                                            step="0.1"
+                                            placeholder="例: 0"
+                                            aria-label="インフレ率"
+                                        />
+                                    </InputField>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-6">
+                        <button
+                            onClick={runSimulation}
+                            disabled={isCalculating}
+                            className={`${colors.accent} w-full p-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-opacity-50 shadow-md flex justify-center items-center ${isCalculating ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            aria-label={isCalculating ? "計算中" : "シミュレーション実行"}
+                        >
+                            {isCalculating ? (
+                                <>
+                                    <LoadingSpinner size="sm" className="mr-2" />
+                                    計算中...
+                                </>
+                            ) : (
+                                'シミュレーション実行'
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {errors.simulation && (
+                    <div className="mt-4 p-3 bg-red-900 text-gray-100 rounded-md">
+                        {errors.simulation}
+                    </div>
+                )}
+
+                {results.length > 0 && (
+                    <div className="mt-8 space-y-6">
+                        <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
+                            <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>資産推移</h2>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <LineChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#4A4A5A" />
+                                    <XAxis dataKey="year" stroke="#e2e8f0" tick={{ fontSize: 12, fill: '#e2e8f0' }} />
+                                    <YAxis
+                                        yAxisId="left"
+                                        orientation="left"
+                                        tickFormatter={(value) => formatBTC(value, 4)}
+                                        tick={{ fill: '#e2e8f0' }}
+                                        domain={['auto', 'auto']}
+                                        label={{
+                                            value: 'BTC残高',
+                                            angle: -90,
+                                            position: 'insideLeft',
+                                            style: { fill: '#34D399', fontSize: 12, fontWeight: 500 },
+                                        }}
+                                    />
+                                    <YAxis
+                                        yAxisId="right"
+                                        orientation="right"
+                                        tickFormatter={(value) => formatYen(value, 2)}
+                                        tick={{ fill: '#e2e8f0' }}
+                                        domain={['auto', 'auto']}
+                                        label={{
+                                            value: '資産評価額',
+                                            angle: 90,
+                                            position: 'insideRight',
+                                            style: { fill: '#60A5FA', fontSize: 12, fontWeight: 500 },
+                                        }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'rgba(26, 32, 44, 0.95)', border: '1px solid rgba(82, 82, 91, 0.8)', borderRadius: '8px' }}
+                                        labelStyle={{ color: '#e2e8f0' }}
+                                        formatter={(value, name) => {
+                                            if (typeof name === 'string') {
+                                                if (name === 'btcHeld') {
+                                                    return [formatBTC(value as number, 4), '残り保有BTC'];
+                                                } else if (name === 'totalValue') {
+                                                    return [formatYen(value as number, 2), '資産評価額'];
+                                                }
+                                            }
+                                            return [value, name];
+                                        }}
+                                    />
+                                    <Legend wrapperStyle={{ color: '#e2e8f0' }} />
+                                    <Line
+                                        yAxisId="left"
+                                        type="monotone"
+                                        dataKey="btcHeld"
+                                        stroke="#34D399"
+                                        name="残り保有BTC"
+                                        dot={false}
+                                    />
+                                    <Line
+                                        yAxisId="right"
+                                        type="monotone"
+                                        dataKey="totalValue"
+                                        stroke="#60A5FA"
+                                        name="資産評価額"
+                                        dot={false}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        <SimulationHighlights
+                            initialBTC={initialBTC}
+                            startYear={startYear}
+                            withdrawalType={withdrawalType}
+                            withdrawalAmount={withdrawalAmount}
+                            withdrawalRate={withdrawalRate}
+                            results={results}
+                        />
+
+                        <SimulationResultsTable
+                            results={results}
+                            showSecondPhase={showSecondPhase}
+                        />
+                        <div className={`mt-8 ${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder} text-center`}>
+                            <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>次のステップ</h2>
+                            <p className={`${typography.body} ${colors.textMuted} mb-6 max-w-xl mx-auto`}>
+                                取り崩し計画の前に、まずは資産を築くシミュレーションを試してみませんか？毎月の積み立てが将来どれほどの価値になるかを確認できます。
+                            </p>
+                            <Link
+                                to="/investment-simulator"
+                                className={`${colors.secondary} inline-block px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 shadow-md`}
+                            >
+                                積み立てシミュレーターを試す
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
 export default Home;

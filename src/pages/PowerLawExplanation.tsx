@@ -1,12 +1,13 @@
+// src/pages/PowerLawExplanation.tsx
+
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Info, TrendingUp, AlertTriangle, BookOpen, ArrowRight, CloudLightning } from 'lucide-react'; // Added CloudLightning icon for bubbles
+import { ArrowLeft, Info, TrendingUp, AlertTriangle, BookOpen, ArrowRight, CloudLightning } from 'lucide-react';
+import { useBitcoinData } from '../hooks/useBitcoinData';
+import PowerLawChart from '../components/charts/PowerLawChart';
+import DataContainer from '../components/ui/DataContainer';
 
-// Props interface: chartComponentは任意で柔軟性を持たせる
-interface PowerLawExplanationProps {
-    chartComponent?: React.ReactNode;
-}
 
-// スタイル設定 - Updated Color Palette and Typography
 const typography = {
     h1: 'text-3xl sm:text-4xl font-semibold tracking-tight',
     h2: 'text-xl sm:text-2xl font-medium',
@@ -15,24 +16,43 @@ const typography = {
 };
 
 const colors = {
-    primary: 'bg-blue-500 hover:bg-blue-600 text-white', // Softer primary color
-    cardBg: 'bg-gray-800', // Solid dark background for cards
+    primary: 'bg-blue-500 hover:bg-blue-600 text-white',
+    cardBg: 'bg-gray-800',
     cardBorder: 'border border-gray-700',
     textPrimary: 'text-gray-100',
-    textSecondary: 'text-gray-400', // Softer secondary text
+    textSecondary: 'text-gray-400',
     textMuted: 'text-gray-500',
-    accent: 'text-blue-400', // Softer accent color
+    accent: 'text-blue-400',
     accentHover: 'hover:text-blue-300',
     warning: 'text-yellow-400',
 };
 
+const PowerLawExplanation: React.FC = () => {
+    // このページで直接データを取得
+    const { loading, error, currentPrice, powerLawData, exchangeRate, rSquared } = useBitcoinData();
 
-const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
+    // チャートコンポーネントを内部で生成
+    const chartComponent = (
+        <DataContainer
+            isLoading={loading}
+            error={error?.message}
+            loadingMessage="チャートデータ取得中..."
+            noDataMessage="チャートデータがありません"
+        >
+            <PowerLawChart
+                exchangeRate={exchangeRate || 1}
+                rSquared={rSquared || 0}
+                chartData={powerLawData || []}
+                currentPrice={currentPrice?.prices.usd ?? 0}
+                height={500}
+            />
+        </DataContainer>
+    );
+
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100"> {/* Darker background */}
-            <div className="flex-grow max-w-3xl mx-auto px-6 lg:px-8 py-12"> {/* Reduced max-width for better readability and removed sm:px-6 */}
-                {/* ヘッダー */}
-                <header className="mb-12"> {/* Removed text-center from header */}
+        <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100">
+            <div className="flex-grow max-w-3xl mx-auto px-6 lg:px-8 py-12">
+                <header className="mb-12">
                     <h1 className={`${typography.h1} ${colors.accent} mb-4`}>
                         ビットコインの長期トレンド：パワーロー理論で成長パターンを解説
                     </h1>
@@ -41,7 +61,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </p>
                     <div className="mt-5">
                         <Link
-                            to="/simulators/investment"
+                            to="/investment-simulator"
                             className={`${colors.primary} px-5 py-2 rounded-full text-sm font-medium inline-flex items-center transition-transform hover:scale-105 shadow-lg`}
                         >
                             積み立てシミュレーションを試してみる <ArrowRight className="ml-2 h-4 w-4" />
@@ -52,10 +72,9 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </Link>
                 </header>
 
-                {/* パワーローとは */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <Info className="h-6 w-6 mr-2 text-blue-300" /> {/* Updated accent color */}
+                        <Info className="h-6 w-6 mr-2 text-blue-300" />
                         パワーローとは？長期投資を支える科学的な法則
                     </h2>
                     <div className={`${typography.body} ${colors.textSecondary} space-y-4`}>
@@ -74,7 +93,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                     <div className="mt-5 text-right">
                         <Link
-                            to="/simulators/investment"
+                            to="/investment-simulator"
                             className={`${colors.accent} ${colors.accentHover} text-sm font-medium inline-flex items-center transition-colors`}
                         >
                             積み立てシミュレーションを試してみる <ArrowRight className="ml-1 h-4 w-4" />
@@ -82,10 +101,9 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-                {/* ビットコインとパワーロー */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" /> {/* Updated accent color */}
+                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
                         なぜビットコインにパワーローが関係するのか
                     </h2>
                     <div className={`${typography.body} ${colors.textSecondary} space-y-4`}>
@@ -97,7 +115,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                             <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
-                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center"> {/* Updated accent color */}
+                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center">
                                     <span className="mr-2">🌐</span> ネットワーク効果
                                 </h3>
                                 <p className="text-sm">
@@ -105,7 +123,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                                 </p>
                             </div>
                             <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
-                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center"> {/* Updated accent color */}
+                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center">
                                     <span className="mr-2">⛏️</span> 供給の安定性
                                 </h3>
                                 <p className="text-sm">
@@ -113,7 +131,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                                 </p>
                             </div>
                             <div className="bg-gray-700 bg-opacity-50 p-4 rounded-lg">
-                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center"> {/* Updated accent color */}
+                                <h3 className="text-blue-300 font-semibold mb-2 flex items-center">
                                     <span className="mr-2">🔐</span> セキュリティの向上
                                 </h3>
                                 <p className="text-sm">
@@ -127,7 +145,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                     <div className="mt-5 text-right">
                         <Link
-                            to="/simulators/investment"
+                            to="/investment-simulator"
                             className={`${colors.accent} ${colors.accentHover} text-sm font-medium inline-flex items-center transition-colors`}
                         >
                             積み立てシミュレーションを試してみる <ArrowRight className="ml-1 h-4 w-4" />
@@ -135,10 +153,9 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-                {/* バブル発生と収束のメカニズム */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <CloudLightning className="h-6 w-6 mr-2 text-blue-300" /> {/* CloudLightning icon for bubble */}
+                        <CloudLightning className="h-6 w-6 mr-2 text-blue-300" />
                         バブル発生、収束のメカニズム：マイニング報酬と市場心理
                     </h2>
                     <div className={`${typography.body} ${colors.textSecondary} space-y-4`}>
@@ -190,7 +207,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                     <div className="mt-5 text-right">
                         <Link
-                            to="/simulators/investment"
+                            to="/investment-simulator"
                             className={`${colors.accent} ${colors.accentHover} text-sm font-medium inline-flex items-center transition-colors`}
                         >
                             積み立てシミュレーションを試してみる <ArrowRight className="ml-1 h-4 w-4" />
@@ -198,11 +215,9 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-
-                {/* チャートの見方 */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" /> {/* Updated accent color */}
+                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
                         パワーローチャートの見方：長期トレンドを把握
                     </h2>
                     <div className={`${typography.body} ${colors.textSecondary} space-y-4`}>
@@ -226,12 +241,12 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                         <p>
                             短期的な価格変動に惑わされず、長期的な視点を持つことが重要です。価格が赤い下限線に近づいた場合、長期投資家にとっては買い増しの好機と考えられます。一方、緑の線から大きく上方に乖離した場合は、過熱している可能性があり、利益確定を検討する目安となります。パワーローチャートを活用することで、価格変動に一喜一憂せず、長期的な視点で投資戦略を立てることが可能です。シミュレーターで、あなたの投資プランを試してみましょう。
                         </p>
-                        {/* chartComponentが渡されていれば表示、なければ何も表示しない */}
-                        {chartComponent && <div className="mt-4">{chartComponent}</div>}
+                        {/* 内部で生成したチャートコンポーネントを表示 */}
+                        <div className="mt-4">{chartComponent}</div>
                     </div>
                     <div className="mt-5 text-right">
                         <Link
-                            to="/simulators/investment"
+                            to="/investment-simulator"
                             className={`${colors.accent} ${colors.accentHover} text-sm font-medium inline-flex items-center transition-colors`}
                         >
                             積み立てシミュレーションを試してみる <ArrowRight className="ml-1 h-4 w-4" />
@@ -239,10 +254,9 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-                {/* 投資への活用 */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" /> {/* Updated accent color */}
+                        <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
                         投資への応用：長期的な視点で戦略を立てる
                     </h2>
                     <div className={`${typography.body} ${colors.textSecondary} space-y-4`}>
@@ -266,7 +280,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                             </p>
                         </div>
                         <div className="bg-gray-700 bg-opacity-30 p-4 rounded-lg mb-4">
-                            <h3 className="text-blue-300 font-semibold mb-2 flex items-center"> {/* Updated accent color */}
+                            <h3 className="text-blue-300 font-semibold mb-2 flex items-center">
                                 <span className="mr-2">⏱️</span> 3. 毎月着実に積み立てる
                             </h3>
                             <p>
@@ -275,9 +289,8 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                         </div>
                     </div>
                     <div className="mt-5 text-right">
-                        {/* Corrected link to withdrawal simulator */}
                         <Link
-                            to="/simulators/withdrawal"
+                            to="/"
                             className={`${colors.accent} ${colors.accentHover} text-sm font-medium inline-flex items-center transition-colors`}
                         >
                             取り崩しシミュレーションを試してみる <ArrowRight className="ml-1 h-4 w-4" />
@@ -285,7 +298,6 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-                {/* 注意点 */}
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <AlertTriangle className="h-6 w-6 mr-2 ${colors.warning}" />
@@ -321,17 +333,16 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                     </div>
                 </section>
 
-                {/* 参考情報 */}
                 <section className="mt-12 pt-8 border-t border-gray-700">
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
-                        <BookOpen className="h-6 w-6 mr-2 text-blue-300" /> {/* Updated accent color */}
+                        <BookOpen className="h-6 w-6 mr-2 text-blue-300" />
                         さらに詳しく知りたい方へ：参考情報
                     </h2>
                     <div className={`${colors.cardBg} rounded-xl p-6 shadow-lg ${colors.textSecondary} space-y-4 ${colors.cardBorder}`}>
                         <p>さらに詳しく知りたい方は、以下の情報源も参考にしてください：</p>
                         <ul className="space-y-4">
                             <li className="flex items-start">
-                                <BookOpen className="h-5 w-5 mr-2 flex-shrink-0 text-blue-300" /> {/* Updated accent color */}
+                                <BookOpen className="h-5 w-5 mr-2 flex-shrink-0 text-blue-300" />
                                 <div>
                                     <a
                                         href="https://giovannisantostasi.medium.com/the-bitcoin-power-law-theory-962dfaf99ee9"
@@ -352,7 +363,7 @@ const PowerLawExplanation = ({ chartComponent }: PowerLawExplanationProps) => {
                         </p>
                         <div className="mt-6 text-center">
                             <Link
-                                to="/simulators/investment"
+                                to="/investment-simulator"
                                 className={`${colors.primary} px-5 py-2 rounded-full text-sm font-medium inline-flex items-center transition-transform hover:scale-105 shadow-lg`}
                             >
                                 積み立てシミュレーションを試してみる <ArrowRight className="ml-2 h-4 w-4" />

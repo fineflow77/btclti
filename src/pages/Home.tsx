@@ -329,15 +329,7 @@ const Home: React.FC = () => {
                 <p className={`${typography.h3} text-gray-300 max-w-3xl mx-auto mt-4`}>
                     あなたが持つBTC資産を、将来の価格予測と連動させて「取り崩し」をシミュレーション。経済的自立へのリアルな計画を立てよう。
                 </p>
-                <div className="mt-8">
-                    <button
-                        onClick={handleScrollToSimulator}
-                        className={`${colors.secondary} px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-400 focus:ring-opacity-50 shadow-md inline-flex items-center`}
-                    >
-                        シミュレーターへ進む
-                        <ChevronDown className="ml-2" size={20} />
-                    </button>
-                </div>
+
             </div>
 
             {/* ... シミュレーター入力部 (変更なし) ... */}

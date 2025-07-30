@@ -28,14 +28,13 @@ const colors = {
 };
 
 const PowerLawExplanation: React.FC = () => {
-    // このページで直接データを取得
     const { loading, error, currentPrice, powerLawData, exchangeRate, rSquared } = useBitcoinData();
 
-    // チャートコンポーネントを内部で生成
     const chartComponent = (
         <DataContainer
             isLoading={loading}
-            error={error?.message}
+            // ★★★ エラー修正: error?.message -> error ★★★
+            error={error}
             loadingMessage="チャートデータ取得中..."
             noDataMessage="チャートデータがありません"
         >
@@ -71,7 +70,6 @@ const PowerLawExplanation: React.FC = () => {
                         <ArrowLeft className="w-5 h-5 mr-2" /> ホームに戻る
                     </Link>
                 </header>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <Info className="h-6 w-6 mr-2 text-blue-300" />
@@ -100,7 +98,6 @@ const PowerLawExplanation: React.FC = () => {
                         </Link>
                     </div>
                 </section>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
@@ -152,7 +149,6 @@ const PowerLawExplanation: React.FC = () => {
                         </Link>
                     </div>
                 </section>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <CloudLightning className="h-6 w-6 mr-2 text-blue-300" />
@@ -181,7 +177,6 @@ const PowerLawExplanation: React.FC = () => {
                                 新規参入者の増加と更なる価格上昇期待が連鎖的に作用し、価格は短期間で急騰、バブルが形成されます。
                             </li>
                         </ul>
-
                         <h3 className={`${typography.h2} ${colors.accent} mt-4 mb-2`}>バブル収束のメカニズム</h3>
                         <ul className="list-disc list-inside pl-4 space-y-2">
                             <li>
@@ -214,7 +209,6 @@ const PowerLawExplanation: React.FC = () => {
                         </Link>
                     </div>
                 </section>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
@@ -241,7 +235,6 @@ const PowerLawExplanation: React.FC = () => {
                         <p>
                             短期的な価格変動に惑わされず、長期的な視点を持つことが重要です。価格が赤い下限線に近づいた場合、長期投資家にとっては買い増しの好機と考えられます。一方、緑の線から大きく上方に乖離した場合は、過熱している可能性があり、利益確定を検討する目安となります。パワーローチャートを活用することで、価格変動に一喜一憂せず、長期的な視点で投資戦略を立てることが可能です。シミュレーターで、あなたの投資プランを試してみましょう。
                         </p>
-                        {/* 内部で生成したチャートコンポーネントを表示 */}
                         <div className="mt-4">{chartComponent}</div>
                     </div>
                     <div className="mt-5 text-right">
@@ -253,7 +246,6 @@ const PowerLawExplanation: React.FC = () => {
                         </Link>
                     </div>
                 </section>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <TrendingUp className="h-6 w-6 mr-2 text-blue-300" />
@@ -297,7 +289,6 @@ const PowerLawExplanation: React.FC = () => {
                         </Link>
                     </div>
                 </section>
-
                 <section className={`${colors.cardBg} rounded-xl p-6 mb-8 shadow-lg ${colors.cardBorder}`}>
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <AlertTriangle className="h-6 w-6 mr-2 ${colors.warning}" />
@@ -332,7 +323,6 @@ const PowerLawExplanation: React.FC = () => {
                         </p>
                     </div>
                 </section>
-
                 <section className="mt-12 pt-8 border-t border-gray-700">
                     <h2 className={`${typography.h2} ${colors.accent} mb-4 flex items-center`}>
                         <BookOpen className="h-6 w-6 mr-2 text-blue-300" />

@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react'; // ★★★ エラー修正: useEffectを削除 ★★★
 import { Link } from 'react-router-dom';
 import { TrendingUp, Info, ArrowUpRight } from 'lucide-react';
 import { useBitcoinData } from '../hooks/useBitcoinData';
@@ -39,8 +39,8 @@ const colors: Record<string, string> = {
 };
 
 const Dashboard: React.FC = () => {
-  // このページでデータフックを呼び出す
-  const { loading, error, currentPrice, exchangeRate, weeklyPrices, powerLawData, dailyPrices } = useBitcoinData();
+  // ★★★ エラー修正: weeklyPricesを削除 ★★★
+  const { loading, error, currentPrice, exchangeRate, powerLawData, dailyPrices, rSquared } = useBitcoinData();
 
   const [activeTab, setActiveTab] = useState<'log' | 'loglog'>('loglog');
 
@@ -81,12 +81,9 @@ const Dashboard: React.FC = () => {
 
   const chartDataToUse = powerLawData || [];
 
-  // weeklyPricesはもう不要なのでrSquaredの計算はuseBitcoinDataフック内で行われる
-
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#1a202c] to-[#2d3748] text-gray-100">
       <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        {/* --- Price Information Section --- */}
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             <div className={`${colors.cardBg} p-3 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg ${colors.cardBorder} transition-all duration-300 hover:shadow-xl`}>
@@ -102,7 +99,8 @@ const Dashboard: React.FC = () => {
               </div>
               <DataContainer
                 isLoading={loading}
-                error={error?.message}
+                // ★★★ エラー修正: error?.message -> error ★★★
+                error={error}
                 loadingMessage="価格データ取得中..."
                 noDataMessage="価格データが利用できません"
               >
@@ -144,7 +142,8 @@ const Dashboard: React.FC = () => {
               </div>
               <DataContainer
                 isLoading={loading}
-                error={error?.message}
+                // ★★★ エラー修正: error?.message -> error ★★★
+                error={error}
                 loadingMessage="価格データ取得中..."
                 noDataMessage="中央価格データが利用できません"
               >
@@ -175,7 +174,8 @@ const Dashboard: React.FC = () => {
               </div>
               <DataContainer
                 isLoading={loading}
-                error={error?.message}
+                // ★★★ エラー修正: error?.message -> error ★★★
+                error={error}
                 loadingMessage="価格データ取得中..."
                 noDataMessage="下限価格データが利用できません"
               >
@@ -207,8 +207,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* --- Main: Tabbed Power Law Chart --- */}
         <div>
           <h1 className={`${typography.h1} text-center text-[#D4AF37] mb-4`}>パワーローチャート</h1>
           <div className="flex justify-center mb-2 space-x-10">
@@ -230,12 +228,13 @@ const Dashboard: React.FC = () => {
           <div className={`relative rounded-2xl ${colors.cardBorder} overflow-hidden shadow-lg`}>
             <DataContainer
               isLoading={loading}
-              error={error?.message}
+              // ★★★ エラー修正: error?.message -> error ★★★
+              error={error}
               loadingMessage="チャートデータ取得中..."
               noDataMessage="チャートデータがありません"
             >
               <PowerLawChartWrapper
-                rSquared={useBitcoinData().rSquared || 0}
+                rSquared={rSquared || 0}
                 chartData={chartDataToUse}
                 exchangeRate={exchangeRate || 1}
                 currentPrice={currentPrice?.prices.usd}
@@ -256,8 +255,6 @@ const Dashboard: React.FC = () => {
             </Link>
           </div>
         </div>
-
-        {/* --- Simulator Links --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
             to="/investment-simulator"
@@ -290,8 +287,6 @@ const Dashboard: React.FC = () => {
             <ArrowUpRight className="h-6 w-6 text-white" />
           </Link>
         </div>
-
-        {/* --- Analysis News Link --- */}
         <div className="text-center">
           <Link
             to="/analysis-news"

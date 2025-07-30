@@ -1,5 +1,6 @@
 // src/pages/Home.tsx
 
+import { track } from '@vercel/analytics'; // これをインポート
 import React, { useState, useMemo, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -252,6 +253,15 @@ const Home: React.FC = () => {
         } catch (error) {
             console.error("Failed to save inputs to localStorage:", error);
         }
+
+        // ▼▼▼ Vercel Analyticsにイベントを送信 ▼▼▼
+        track('Run Simulation', {
+            priceModel: priceModel,
+            withdrawalType: withdrawalType,
+            startYear: startYear,
+        });
+
+        setIsCalculating(true);
 
         setIsCalculating(true);
         const inputs: WithdrawalInputs = {
@@ -559,6 +569,15 @@ const Home: React.FC = () => {
                 <div className="mt-8 space-y-6">
                     <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
                         <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>FIREプラン 結果サマリー</h2>
+                        {/* ▼▼▼【重要】このブロックをここに追加します ▼▼▼ */}
+                        <p className={`${typography.small} ${colors.textMuted} text-center mb-6 max-w-xl mx-auto`}>
+                            この資産推移は、統計的価格予測モデル
+                            <Link to="/power-law" className="text-amber-400 hover:underline font-semibold mx-1">
+                                「パワーローモデル」
+                            </Link>
+                            に基づいて計算されています。
+                        </p>
+                        {/* ▲▲▲ ここまで追加 ▲▲▲ */}
                         <ResponsiveContainer width="100%" height={400}>
                             <LineChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#4A4A5A" />

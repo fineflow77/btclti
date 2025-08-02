@@ -172,7 +172,6 @@ const SimulationResultsTable: React.FC<{
 
 // メインコンポーネント
 const Home: React.FC = () => {
-    // State declarations
     const [initialBTC, setInitialBTC] = useState<string>("");
     const [startYear, setStartYear] = useState<string>("2025");
     const [priceModel, setPriceModel] = useState<PriceModel>(PriceModel.STANDARD);
@@ -186,7 +185,7 @@ const Home: React.FC = () => {
     const [reductionYears, setReductionYears] = useState<string>("20");
 
     const [showSecondPhase, setShowSecondPhase] = useState<boolean>(false);
-    const [secondPhaseYear, setSecondPhaseYear] = useState<string>("2030");
+    const [secondPhaseYear, setSecondPhaseYear] = useState<string>("2045");
     const [secondPhaseType, setSecondPhaseType] = useState<'fixed' | 'percentage'>("fixed");
     const [secondPhaseAmount, setSecondPhaseAmount] = useState<string>("");
     const [secondPhaseRate, setSecondPhaseRate] = useState<string>("4");
@@ -251,7 +250,7 @@ const Home: React.FC = () => {
                 setEndRate(parsedData.endRate ?? "3");
                 setReductionYears(parsedData.reductionYears ?? "20");
                 setShowSecondPhase(parsedData.showSecondPhase ?? false);
-                setSecondPhaseYear(parsedData.secondPhaseYear ?? "2030");
+                setSecondPhaseYear(parsedData.secondPhaseYear ?? "2045");
                 setSecondPhaseType(parsedData.secondPhaseType ?? "fixed");
                 setSecondPhaseAmount(parsedData.secondPhaseAmount ?? "");
                 setSecondPhaseRate(parsedData.secondPhaseRate ?? "4");
@@ -372,20 +371,34 @@ const Home: React.FC = () => {
                     )}
 
                     <div className="mt-4">
-                        <label className="flex items-center space-x-2 text-gray-300 mb-2">
-                            <input type="checkbox" checked={showSecondPhase} onChange={(e) => setShowSecondPhase(e.target.checked)} className="rounded bg-gray-600" />
-                            <span className={`${typography.body} ${colors.textSecondary}`}>プラン変更のセカンドフェーズを設定する</span>
+                        <label className="flex items-center space-x-2 text-gray-300 mb-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={showSecondPhase}
+                                onChange={(e) => setShowSecondPhase(e.target.checked)}
+                                className="rounded bg-gray-600 focus:ring-2 focus:ring-amber-500"
+                            />
+                            <span className={`${typography.body} ${colors.textSecondary}`}>
+                                {withdrawalType === WithdrawalStrategy.ACTIVE_FIRE
+                                    ? '逓減終了後にプランを変更する'
+                                    : '指定年からプランを変更する'
+                                }
+                            </span>
                             <TooltipIcon content={TOOLTIPS.secondPhase} />
                         </label>
                         {showSecondPhase && (
                             <div className="pl-4 space-y-4 border-l-2 border-gray-700">
-                                <InputField label="プラン変更の開始年" error={errors.secondPhaseYear}>
+                                <InputField
+                                    label="変更開始年"
+                                    error={errors.secondPhaseYear}
+                                >
                                     <select value={secondPhaseYear} onChange={(e) => setSecondPhaseYear(e.target.value)} className="w-full bg-gray-700 p-2 rounded-md">
                                         {Array.from({ length: 26 }, (_, i) => CURRENT_YEAR + i).map((year) => (
                                             <option key={year} value={year}>{year}年</option>
                                         ))}
                                     </select>
                                 </InputField>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <InputField label="変更後の取り崩し方法">
                                         <select value={secondPhaseType} onChange={(e) => setSecondPhaseType(e.target.value as 'fixed' | 'percentage')} className="w-full bg-gray-700 p-2 rounded-md">
@@ -408,6 +421,7 @@ const Home: React.FC = () => {
                             </div>
                         )}
                     </div>
+
                     <div className="mt-4">
                         <button className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors w-full text-left ${showAdvancedOptions ? 'bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'}`} onClick={() => setShowAdvancedOptions(!showAdvancedOptions)} aria-expanded={showAdvancedOptions} aria-controls="advanced-options">
                             <div className="flex items-center space-x-2">

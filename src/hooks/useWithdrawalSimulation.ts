@@ -92,14 +92,28 @@ export const useWithdrawalSimulation = () => {
         }
 
         if (inputs.showSecondPhase) {
+            const startYearNum = parseInt(inputs.startYear, 10);
+            const secondPhaseYearNum = parseInt(inputs.secondPhaseYear, 10);
+
+            if (inputs.withdrawalType === WithdrawalStrategy.ACTIVE_FIRE) {
+                const reductionYearsNum = parseInt(inputs.reductionYears, 10);
+                if (!isNaN(reductionYearsNum)) {
+                    const earliestSecondPhaseYear = startYearNum + reductionYearsNum;
+                    if (secondPhaseYearNum < earliestSecondPhaseYear) {
+                        newErrors.secondPhaseYear = `逓減が終了する${earliestSecondPhaseYear}年以降にしてください`;
+                    }
+                }
+            } else {
+                if (secondPhaseYearNum <= startYearNum) {
+                    newErrors.secondPhaseYear = 'FIRE開始年より後にしてください';
+                }
+            }
+
             if (inputs.secondPhaseType === 'fixed' && (!inputs.secondPhaseAmount || isNaN(parseFloat(inputs.secondPhaseAmount)) || parseFloat(inputs.secondPhaseAmount) <= 0)) {
                 newErrors.secondPhaseAmount = '有効な値を入力してください';
             }
             if (inputs.secondPhaseType === 'percentage' && (!inputs.secondPhaseRate || isNaN(parseFloat(inputs.secondPhaseRate)) || parseFloat(inputs.secondPhaseRate) <= 0 || parseFloat(inputs.secondPhaseRate) > 100)) {
                 newErrors.secondPhaseRate = '0～100%で入力してください';
-            }
-            if (parseInt(inputs.secondPhaseYear) <= parseInt(inputs.startYear)) {
-                newErrors.secondPhaseYear = '開始年より後にしてください';
             }
         }
         if (isNaN(parseFloat(inputs.taxRate)) || parseFloat(inputs.taxRate) < 0 || parseFloat(inputs.taxRate) > 100) {
@@ -130,6 +144,7 @@ export const useWithdrawalSimulation = () => {
             const pStartRate = parseFloat(inputs.startRate) / 100;
             const pEndRate = parseFloat(inputs.endRate) / 100;
             const pReductionYears = parseInt(inputs.reductionYears, 10);
+            const secondPhaseYearNum = parseInt(inputs.secondPhaseYear, 10);
 
             let basePriceUSD = 0;
             let baseDays = 0;
@@ -174,11 +189,34 @@ export const useWithdrawalSimulation = () => {
                 let withdrawalBTC = 0;
                 let withdrawalValue = 0;
                 let effectiveWithdrawalRate: number | string = '-';
+                let phaseLabel = year < startYearNum ? '積立' : '取崩';
 
                 if (year >= startYearNum) {
-                    switch (inputs.withdrawalType) {
+                    let activeWithdrawalType = inputs.withdrawalType;
+                    const yearsSinceStart = year - startYearNum;
+
+                    let isSecondPhaseActive = false;
+                    if (inputs.showSecondPhase && year >= secondPhaseYearNum) {
+                        if (inputs.withdrawalType === WithdrawalStrategy.ACTIVE_FIRE) {
+                            if (yearsSinceStart >= pReductionYears) {
+                                isSecondPhaseActive = true;
+                            }
+                        } else {
+                            isSecondPhaseActive = true;
+                        }
+                    }
+
+                    if (isSecondPhaseActive) {
+                        activeWithdrawalType = inputs.secondPhaseType === 'fixed' ? WithdrawalStrategy.FIXED : WithdrawalStrategy.PERCENTAGE;
+                        phaseLabel = '2段階目';
+                    } else if (inputs.withdrawalType === WithdrawalStrategy.ACTIVE_FIRE) {
+                        phaseLabel = yearsSinceStart < pReductionYears ? '逓減中' : '逓減終了';
+                    } else if (inputs.showSecondPhase) {
+                        phaseLabel = '1段階目';
+                    }
+
+                    switch (activeWithdrawalType) {
                         case WithdrawalStrategy.ACTIVE_FIRE: {
-                            const yearsSinceStart = year - startYearNum;
                             let currentRate = pStartRate;
                             if (pReductionYears > 1 && yearsSinceStart < pReductionYears) {
                                 const progress = yearsSinceStart / (pReductionYears - 1);
@@ -190,13 +228,16 @@ export const useWithdrawalSimulation = () => {
                             break;
                         }
                         case WithdrawalStrategy.PERCENTAGE: {
-                            const rate = parseFloat(inputs.withdrawalRate) / 100;
+                            const rateInput = isSecondPhaseActive ? inputs.secondPhaseRate : inputs.withdrawalRate;
+                            const rate = parseFloat(rateInput) / 100;
                             withdrawalBTC = currentBTC * rate;
                             break;
                         }
                         case WithdrawalStrategy.FIXED: {
-                            const monthlyWithdrawal = parseFloat(inputs.withdrawalAmount);
-                            const desiredAnnualWithdrawalJPY = monthlyWithdrawal * 12 * Math.pow(1 + inflationRateNum, year - startYearNum);
+                            const amountInput = isSecondPhaseActive ? inputs.secondPhaseAmount : inputs.withdrawalAmount;
+                            const monthlyWithdrawal = parseFloat(amountInput);
+                            const baseYearForInflation = isSecondPhaseActive ? secondPhaseYearNum : startYearNum;
+                            const desiredAnnualWithdrawalJPY = monthlyWithdrawal * 12 * Math.pow(1 + inflationRateNum, year - baseYearForInflation);
                             const totalWithdrawalBeforeTax = desiredAnnualWithdrawalJPY / (1 - taxRateNum);
                             withdrawalBTC = totalWithdrawalBeforeTax / btcPriceJPY;
                             break;
@@ -225,7 +266,7 @@ export const useWithdrawalSimulation = () => {
                     withdrawalBTC: year < startYearNum ? '-' : withdrawalBTC,
                     remainingBTC: currentBTC,
                     totalValue: totalValueAfterWithdrawal,
-                    phase: year < startYearNum ? '積立' : '取崩',
+                    phase: phaseLabel,
                 });
             }
 

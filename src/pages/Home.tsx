@@ -1,6 +1,5 @@
 // src/pages/Home.tsx
 
-import { track } from '@vercel/analytics'; // これをインポート
 import React, { useState, useMemo, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -9,10 +8,11 @@ import { formatYen, formatBTC, formatPercentage } from '../utils/formatters';
 import { DEFAULTS, CURRENT_YEAR, PriceModel } from '../utils/constants';
 import { useWithdrawalSimulation, WithdrawalInputs } from '../hooks/useWithdrawalSimulation';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { track } from '@vercel/analytics';
 
 // スタイル定義
 const typography = {
-    h1: 'text-4xl sm:text-5xl font-extrabold tracking-tight', // スマホでも見栄えが良いように調整
+    h1: 'text-4xl sm:text-5xl font-extrabold tracking-tight',
     h2: 'text-xl sm:text-2xl font-semibold tracking-tight',
     h3: 'text-lg sm:text-xl font-medium',
     body: 'text-sm sm:text-base font-normal',
@@ -81,7 +81,7 @@ const InputField: React.FC<{
     </div>
 );
 
-// ツールチップの内容を「FIRE」コンセプトに合わせて更新
+// ツールチップの内容
 const TOOLTIPS = {
     initialBTC: "現在保有しているビットコインの量を入力してください。",
     withdrawalAmount: "FIRE後の毎月の生活費として必要な金額を入力してください。税引き後の手取り額として計算されます。",
@@ -102,61 +102,8 @@ const TOOLTIPS = {
     ),
 };
 
-// シミュレーション結果のハイライトコンポーネント
-const SimulationHighlights: React.FC<{
-    initialBTC: string;
-    startYear: string;
-    withdrawalType: 'fixed' | 'percentage';
-    withdrawalAmount: string;
-    withdrawalRate: string;
-    results: any[];
-}> = ({ initialBTC, startYear, withdrawalType, withdrawalAmount, withdrawalRate, results }) => {
-    const zeroIndex = results.findIndex(r => r.remainingBTC <= 0);
-    const zeroYear = zeroIndex !== -1 ? results[zeroIndex].year : null;
-    const fiveYearsLaterValue = results.find(r => r.year === CURRENT_YEAR + 5)?.totalValue || 0;
 
-    return (
-        <div className={`block md:hidden ${colors.cardBg} p-4 rounded-xl shadow-md space-y-3`}>
-            <h3 className={`${typography.h3} ${colors.textPrimary} mb-2`}>ハイライト</h3>
-            <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>BTC初期保有量</div>
-                <div className={`${typography.body} ${colors.textPrimary}`}>
-                    {formatBTC(parseFloat(initialBTC) || 0, 4)}
-                </div>
-            </div>
-            <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>FIRE開始年</div>
-                <div className={`${typography.body} ${colors.textPrimary}`}>{startYear}年</div>
-            </div>
-            <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>
-                    {withdrawalType === "fixed" ? "毎月の生活費" : "年間取り崩し率"}
-                </div>
-                <div className={`${typography.body} ${colors.textPrimary}`}>
-                    {withdrawalType === "fixed"
-                        ? formatYen(parseFloat(withdrawalAmount) || 0, 2)
-                        : formatPercentage(parseFloat(withdrawalRate) || 0, { decimals: 2 })}
-                </div>
-            </div>
-            <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>資金寿命</div>
-                <div className={`${typography.body} ${colors.textPrimary}`}>
-                    {zeroYear
-                        ? `${zeroYear}年（${zeroYear - parseInt(startYear)}年間）`
-                        : "2050年以降も維持"}
-                </div>
-            </div>
-            <div className="bg-gray-700 p-3 rounded-md">
-                <div className={`${typography.small} ${colors.textMuted}`}>5年後の資産評価額</div>
-                <div className={`${typography.body} ${colors.textPrimary}`}>
-                    {formatYen(fiveYearsLaterValue, 2)}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// シミュレーション結果テーブルコンポーネント
+// === [UI改善] シミュレーション結果テーブルコンポーネント ===
 const SimulationResultsTable: React.FC<{
     results: any[];
     showSecondPhase: boolean;
@@ -167,51 +114,57 @@ const SimulationResultsTable: React.FC<{
         </div>
         <div className="overflow-x-auto -mx-6 px-6">
             <table className="min-w-full divide-y divide-gray-700">
-                <thead className="bg-gray-700">
+                <thead className="bg-gray-900">
                     <tr>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC価格</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">年</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">BTC価格</th>
                         {showSecondPhase && (
-                            <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>段階</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">段階</th>
                         )}
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>取り崩し率</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>年間生活費</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>売却BTC</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>BTC残高</th>
-                        <th scope="col" className={`${typography.small} px-4 py-3 text-left ${colors.textPrimary} uppercase tracking-wider`}>資産評価額</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">取り崩し率</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">年間生活費</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">売却BTC</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">BTC残高</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">資産評価額</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-700">
-                    {results.map((result) => (
-                        <tr key={result.year} className={result.year % 2 === 0 ? "bg-gray-800" : "bg-gray-750 hover:bg-gray-700 transition-colors duration-200"}>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.year}</td>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{formatYen(result.btcPrice, 2)}</td>
-                            {showSecondPhase && (
-                                <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>{result.phase}</td>
-                            )}
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                {typeof result.withdrawalRate === 'number'
-                                    ? formatPercentage(result.withdrawalRate, { decimals: 2 })
-                                    : result.withdrawalRate}
-                            </td>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                {typeof result.withdrawalAmount === 'number'
-                                    ? formatYen(result.withdrawalAmount, 2)
-                                    : result.withdrawalAmount}
-                            </td>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                {typeof result.withdrawalBTC === 'number'
-                                    ? formatBTC(result.withdrawalBTC, 4)
-                                    : result.withdrawalBTC}
-                            </td>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                {formatBTC(result.remainingBTC, 4)}
-                            </td>
-                            <td className={`${typography.body} px-4 py-2 whitespace-nowrap ${colors.textPrimary}`}>
-                                {formatYen(result.totalValue, 2)}
-                            </td>
-                        </tr>
-                    ))}
+                <tbody className="divide-y divide-gray-800">
+                    {results.map((result, index) => {
+                        const isWithdrawalPhase = typeof result.withdrawalAmount === 'number' && result.withdrawalAmount > 0;
+                        const isFirstWithdrawalRow = isWithdrawalPhase && (index === 0 || !(typeof results[index - 1].withdrawalAmount === 'number' && results[index - 1].withdrawalAmount > 0));
+
+                        return (
+                            <tr
+                                key={result.year}
+                                className={`
+                                    ${index % 2 === 0 ? "bg-gray-800/50" : "bg-gray-700/40"}
+                                    ${isFirstWithdrawalRow ? 'border-t-2 border-amber-500/60' : ''}
+                                    hover:bg-gray-700 transition-colors duration-200
+                                `}
+                            >
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-white">{result.year}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{formatYen(result.btcPrice, 2)}</td>
+                                {showSecondPhase && (
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">{result.phase}</td>
+                                )}
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
+                                    {typeof result.withdrawalRate === 'number' ? formatPercentage(result.withdrawalRate, { decimals: 2 }) : result.withdrawalRate}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
+                                    {typeof result.withdrawalAmount === 'number' ? formatYen(result.withdrawalAmount, 2) : result.withdrawalAmount}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
+                                    {typeof result.withdrawalBTC === 'number' ? formatBTC(result.withdrawalBTC, 4) : result.withdrawalBTC}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-green-400">
+                                    {formatBTC(result.remainingBTC, 4)}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-400">
+                                    {formatYen(result.totalValue, 2)}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>
@@ -237,7 +190,9 @@ const Home: React.FC = () => {
     const [exchangeRate, setExchangeRate] = useState<string>(DEFAULTS.EXCHANGE_RATE.toString());
     const [inflationRate, setInflationRate] = useState<string>(DEFAULTS.INFLATION_RATE.toString());
     const [isCalculating, setIsCalculating] = useState<boolean>(false);
-    const [showFullTableOnMobile, setShowFullTableOnMobile] = useState<boolean>(false);
+
+    // [削除] showFullTableOnMobile は不要になったため削除
+    // const [showFullTableOnMobile, setShowFullTableOnMobile] = useState<boolean>(false);
 
     const { results, errors, simulate } = useWithdrawalSimulation();
 
@@ -254,14 +209,11 @@ const Home: React.FC = () => {
             console.error("Failed to save inputs to localStorage:", error);
         }
 
-        // ▼▼▼ Vercel Analyticsにイベントを送信 ▼▼▼
         track('Run Simulation', {
             priceModel: priceModel,
             withdrawalType: withdrawalType,
             startYear: startYear,
         });
-
-        setIsCalculating(true);
 
         setIsCalculating(true);
         const inputs: WithdrawalInputs = {
@@ -568,8 +520,7 @@ const Home: React.FC = () => {
             {results.length > 0 && (
                 <div className="mt-8 space-y-6">
                     <div className={`${colors.cardBg} p-6 rounded-xl shadow-md ${colors.cardBorder}`}>
-                        <h2 className={`${typography.h2} ${colors.textPrimary} mb-4`}>FIREプラン 結果サマリー</h2>
-                        {/* ▼▼▼【重要】このブロックをここに追加します ▼▼▼ */}
+                        <h2 className={`${typography.h2} ${colors.textPrimary} mb-2 text-center`}>FIREプラン 結果サマリー</h2>
                         <p className={`${typography.small} ${colors.textMuted} text-center mb-6 max-w-xl mx-auto`}>
                             この資産推移は、統計的価格予測モデル
                             <Link to="/power-law" className="text-amber-400 hover:underline font-semibold mx-1">
@@ -577,7 +528,6 @@ const Home: React.FC = () => {
                             </Link>
                             に基づいて計算されています。
                         </p>
-                        {/* ▲▲▲ ここまで追加 ▲▲▲ */}
                         <ResponsiveContainer width="100%" height={400}>
                             <LineChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#4A4A5A" />
@@ -643,43 +593,12 @@ const Home: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <SimulationHighlights
-                        initialBTC={initialBTC}
-                        startYear={startYear}
-                        withdrawalType={withdrawalType}
-                        withdrawalAmount={withdrawalAmount}
-                        withdrawalRate={withdrawalRate}
+                    {/* === [変更] モバイル・PC問わず、常に詳細テーブルを表示 === */}
+                    <SimulationResultsTable
                         results={results}
+                        showSecondPhase={showSecondPhase}
                     />
 
-                    <div className="hidden md:block">
-                        <SimulationResultsTable
-                            results={results}
-                            showSecondPhase={showSecondPhase}
-                        />
-                    </div>
-
-                    <div className="block md:hidden">
-                        <button
-                            onClick={() => setShowFullTableOnMobile(!showFullTableOnMobile)}
-                            className="w-full flex justify-between items-center p-3 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors text-left mt-4"
-                            aria-expanded={showFullTableOnMobile}
-                        >
-                            <span className={`${typography.body} ${colors.textPrimary}`}>詳細な年間推移（全期間）</span>
-                            {showFullTableOnMobile ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                        </button>
-                        {showFullTableOnMobile && (
-                            <div className="mt-2">
-                                <p className="text-xs text-gray-400 text-center mb-3 animate-pulse">
-                                    ◀︎ テーブルを横にスクロールできます ▶︎
-                                </p>
-                                <SimulationResultsTable
-                                    results={results}
-                                    showSecondPhase={showSecondPhase}
-                                />
-                            </div>
-                        )}
-                    </div>
                 </div>
             )}
 

@@ -135,18 +135,10 @@ const SimulationResultsTable: React.FC<{
                                 className={`
                                     border-b border-gray-700/50
                                     ${index % 2 === 0 ? "bg-gray-800/50" : "bg-transparent"}
+                                    ${index === firstWithdrawalIndex ? 'border-t-4 border-amber-500/80 bg-amber-900/10' : ''}
                                     hover:bg-gray-700/80 transition-colors duration-200
-                                    relative
                                 `}
                             >
-                                {index === firstWithdrawalIndex && (
-                                    <td colSpan={showSecondPhase ? 9 : 8} className="p-0 absolute w-full -top-1 left-0">
-                                        <div className="w-full border-t-2 border-amber-500 opacity-70"></div>
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
-                                            FIRE 開始
-                                        </div>
-                                    </td>
-                                )}
                                 <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-white">{result.year}</td>
                                 <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-400">{formatYen(result.btcPrice, 2)}</td>
                                 {showSecondPhase && <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-400">{result.phase}</td>}

@@ -1,18 +1,21 @@
 // src/hooks/useWithdrawalSimulation.ts
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { getDaysSinceGenesis } from '../utils/dateUtils';
 import { btcPriceMedian } from '../utils/models';
-import { CURRENT_YEAR, TRANSITION_START_YEAR, TARGET_YEAR, PriceModel } from '../utils/constants';
+import { CURRENT_YEAR, TRANSITION_START_YEAR, TARGET_YEAR, PriceModel, WithdrawalStrategy } from '../utils/constants';
 
-// ★★★ エラー修正: この型定義をexportする ★★★
+// 入力値の型定義
 export interface WithdrawalInputs {
     initialBTC: string;
     startYear: string;
     priceModel: PriceModel;
-    withdrawalType: 'fixed' | 'percentage';
+    withdrawalType: WithdrawalStrategy;
     withdrawalAmount: string;
     withdrawalRate: string;
+    startRate: string;
+    endRate: string;
+    reductionYears: string;
     showSecondPhase: boolean;
     secondPhaseYear: string;
     secondPhaseType: 'fixed' | 'percentage';
@@ -23,7 +26,7 @@ export interface WithdrawalInputs {
     inflationRate: string;
 }
 
-// ★★★ エラー修正: 結果の型定義を明確にする ★★★
+// 結果の型定義
 export interface WithdrawalSimulationResult {
     year: number;
     btcPrice: number;
@@ -35,11 +38,15 @@ export interface WithdrawalSimulationResult {
     phase: string;
 }
 
+// エラーの型定義
 interface SimulationErrors {
     initialBTC?: string;
     startYear?: string;
     withdrawalAmount?: string;
     withdrawalRate?: string;
+    startRate?: string;
+    endRate?: string;
+    reductionYears?: string;
     secondPhaseYear?: string;
     secondPhaseAmount?: string;
     secondPhaseRate?: string;
@@ -51,7 +58,6 @@ interface SimulationErrors {
 
 export const useWithdrawalSimulation = () => {
     const [results, setResults] = useState<WithdrawalSimulationResult[]>([]);
-    // ★★★ エラー修正: errorsをstateで管理し、返すようにする ★★★
     const [errors, setErrors] = useState<SimulationErrors>({});
 
     const validateInputs = (inputs: WithdrawalInputs): boolean => {
@@ -60,15 +66,31 @@ export const useWithdrawalSimulation = () => {
         if (!inputs.initialBTC || isNaN(parseFloat(inputs.initialBTC)) || parseFloat(inputs.initialBTC) < 0) {
             newErrors.initialBTC = '有効な値を入力してください';
         }
-        if (inputs.withdrawalType === 'fixed') {
-            if (!inputs.withdrawalAmount || isNaN(parseFloat(inputs.withdrawalAmount)) || parseFloat(inputs.withdrawalAmount) <= 0) {
-                newErrors.withdrawalAmount = '有効な値を入力してください';
-            }
-        } else {
-            if (!inputs.withdrawalRate || isNaN(parseFloat(inputs.withdrawalRate)) || parseFloat(inputs.withdrawalRate) <= 0 || parseFloat(inputs.withdrawalRate) > 100) {
-                newErrors.withdrawalRate = '0～100%で入力してください';
-            }
+
+        switch (inputs.withdrawalType) {
+            case WithdrawalStrategy.FIXED:
+                if (!inputs.withdrawalAmount || isNaN(parseFloat(inputs.withdrawalAmount)) || parseFloat(inputs.withdrawalAmount) <= 0) {
+                    newErrors.withdrawalAmount = '有効な値を入力してください';
+                }
+                break;
+            case WithdrawalStrategy.PERCENTAGE:
+                if (!inputs.withdrawalRate || isNaN(parseFloat(inputs.withdrawalRate)) || parseFloat(inputs.withdrawalRate) <= 0 || parseFloat(inputs.withdrawalRate) > 100) {
+                    newErrors.withdrawalRate = '0～100%で入力してください';
+                }
+                break;
+            case WithdrawalStrategy.ACTIVE_FIRE:
+                if (!inputs.startRate || isNaN(parseFloat(inputs.startRate)) || parseFloat(inputs.startRate) <= 0 || parseFloat(inputs.startRate) > 100) {
+                    newErrors.startRate = '0～100%で入力してください';
+                }
+                if (!inputs.endRate || isNaN(parseFloat(inputs.endRate)) || parseFloat(inputs.endRate) < 0 || parseFloat(inputs.endRate) > 100) {
+                    newErrors.endRate = '0～100%で入力してください';
+                }
+                if (!inputs.reductionYears || isNaN(parseInt(inputs.reductionYears, 10)) || parseInt(inputs.reductionYears, 10) <= 0) {
+                    newErrors.reductionYears = '1年以上で入力してください';
+                }
+                break;
         }
+
         if (inputs.showSecondPhase) {
             if (inputs.secondPhaseType === 'fixed' && (!inputs.secondPhaseAmount || isNaN(parseFloat(inputs.secondPhaseAmount)) || parseFloat(inputs.secondPhaseAmount) <= 0)) {
                 newErrors.secondPhaseAmount = '有効な値を入力してください';
@@ -94,32 +116,43 @@ export const useWithdrawalSimulation = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const simulate = (inputs: WithdrawalInputs): void => {
+    const simulate = useCallback((inputs: WithdrawalInputs): void => {
         if (!validateInputs(inputs)) return;
 
         try {
             let currentBTC = parseFloat(inputs.initialBTC);
             const simulationResults: WithdrawalSimulationResult[] = [];
             const exchangeRateNum = parseFloat(inputs.exchangeRate);
-            const taxRateNum = parseFloat(inputs.taxRate) / 100; // ★★★ エラー修正: taxRateを使用 ★★★
-            const inflationRateNum = parseFloat(inputs.inflationRate) / 100; // ★★★ エラー修正: inflationRateを使用 ★★★
+            const taxRateNum = parseFloat(inputs.taxRate) / 100;
+            const inflationRateNum = parseFloat(inputs.inflationRate) / 100;
             const startYearNum = parseInt(inputs.startYear);
+
+            const pStartRate = parseFloat(inputs.startRate) / 100;
+            const pEndRate = parseFloat(inputs.endRate) / 100;
+            const pReductionYears = parseInt(inputs.reductionYears, 10);
+
             let basePriceUSD = 0;
             let baseDays = 0;
 
             for (let year = CURRENT_YEAR; year <= TARGET_YEAR; year++) {
-                if (currentBTC <= 0) {
-                    const lastResult = simulationResults[simulationResults.length - 1];
-                    if (lastResult) {
-                        simulationResults.push({ ...lastResult, year, remainingBTC: 0, totalValue: 0 });
-                    }
+                if (currentBTC <= 0.00000001) {
+                    currentBTC = 0;
+                    simulationResults.push({
+                        year,
+                        btcPrice: simulationResults[simulationResults.length - 1]?.btcPrice || 0,
+                        withdrawalRate: '-',
+                        withdrawalAmount: '-',
+                        withdrawalBTC: '-',
+                        remainingBTC: 0,
+                        totalValue: 0,
+                        phase: '-',
+                    });
                     continue;
                 }
 
-                const isBeforeStart = year < startYearNum;
                 const days = getDaysSinceGenesis(new Date(year, 0, 1));
-
                 let btcPriceUSD = btcPriceMedian(days, inputs.priceModel) || 0;
+
                 if (year >= TRANSITION_START_YEAR) {
                     if (basePriceUSD === 0) {
                         basePriceUSD = btcPriceMedian(getDaysSinceGenesis(new Date(TRANSITION_START_YEAR - 1, 0, 1)), inputs.priceModel) || 0;
@@ -138,69 +171,65 @@ export const useWithdrawalSimulation = () => {
                 }
 
                 const btcPriceJPY = btcPriceUSD * exchangeRateNum;
-                let desiredAnnualWithdrawalJPY = 0;
-
-                if (!isBeforeStart) {
-                    let currentWithdrawalType = inputs.withdrawalType;
-                    let currentWithdrawalAmount = inputs.withdrawalAmount;
-
-                    if (inputs.showSecondPhase && year >= parseInt(inputs.secondPhaseYear)) {
-                        currentWithdrawalType = inputs.secondPhaseType;
-                        currentWithdrawalAmount = inputs.secondPhaseAmount;
-                    }
-                    if (currentWithdrawalType === 'fixed') {
-                        const monthlyWithdrawal = parseFloat(currentWithdrawalAmount);
-                        desiredAnnualWithdrawalJPY = monthlyWithdrawal * 12 * Math.pow(1 + inflationRateNum, year - startYearNum);
-                    }
-                }
-
                 let withdrawalBTC = 0;
                 let withdrawalValue = 0;
                 let effectiveWithdrawalRate: number | string = '-';
 
-                if (!isBeforeStart) {
-                    let currentWithdrawalType = inputs.withdrawalType;
-                    let currentWithdrawalRate = inputs.withdrawalRate;
-                    if (inputs.showSecondPhase && year >= parseInt(inputs.secondPhaseYear)) {
-                        currentWithdrawalType = inputs.secondPhaseType;
-                        currentWithdrawalRate = inputs.secondPhaseRate;
-                    }
-                    if (currentWithdrawalType === 'fixed') {
-                        const totalWithdrawal = desiredAnnualWithdrawalJPY / (1 - taxRateNum);
-                        withdrawalBTC = totalWithdrawal / btcPriceJPY;
-                        withdrawalValue = desiredAnnualWithdrawalJPY;
-                    } else {
-                        const rate = parseFloat(currentWithdrawalRate) / 100;
-                        withdrawalBTC = currentBTC * rate;
-                        const grossWithdrawalValue = withdrawalBTC * btcPriceJPY;
-                        withdrawalValue = grossWithdrawalValue * (1 - taxRateNum);
+                if (year >= startYearNum) {
+                    const totalValue = currentBTC * btcPriceJPY;
+
+                    switch (inputs.withdrawalType) {
+                        case WithdrawalStrategy.ACTIVE_FIRE: {
+                            const yearsSinceStart = year - startYearNum;
+                            let currentRate = pStartRate;
+                            // 逓減期間中は線形補間で率を計算
+                            if (yearsSinceStart < pReductionYears) {
+                                // 逓減年数が1年の場合は即座に目標率になる
+                                const progress = pReductionYears > 1 ? yearsSinceStart / (pReductionYears - 1) : 1;
+                                currentRate = pStartRate - (pStartRate - pEndRate) * progress;
+                            } else {
+                                currentRate = pEndRate;
+                            }
+                            withdrawalBTC = currentBTC * currentRate;
+                            break;
+                        }
+                        case WithdrawalStrategy.PERCENTAGE: {
+                            const rate = parseFloat(inputs.withdrawalRate) / 100;
+                            withdrawalBTC = currentBTC * rate;
+                            break;
+                        }
+                        case WithdrawalStrategy.FIXED: {
+                            const monthlyWithdrawal = parseFloat(inputs.withdrawalAmount);
+                            const desiredAnnualWithdrawalJPY = monthlyWithdrawal * 12 * Math.pow(1 + inflationRateNum, year - startYearNum);
+                            const totalWithdrawalAfterTax = desiredAnnualWithdrawalJPY;
+                            const totalWithdrawalBeforeTax = totalWithdrawalAfterTax / (1 - taxRateNum);
+                            withdrawalBTC = totalWithdrawalBeforeTax / btcPriceJPY;
+                            break;
+                        }
                     }
 
                     if (currentBTC < withdrawalBTC) {
                         withdrawalBTC = currentBTC;
-                        const grossWithdrawalValue = withdrawalBTC * btcPriceJPY;
-                        withdrawalValue = grossWithdrawalValue * (1 - taxRateNum);
                     }
 
+                    const grossWithdrawalValue = withdrawalBTC * btcPriceJPY;
+                    withdrawalValue = grossWithdrawalValue * (1 - taxRateNum);
                     effectiveWithdrawalRate = (withdrawalBTC / currentBTC) * 100;
                 }
 
-                const yearEndBTC = currentBTC - withdrawalBTC;
-                const totalValue = yearEndBTC * btcPriceJPY;
+                currentBTC -= withdrawalBTC;
+                const totalValueAfterWithdrawal = currentBTC * btcPriceJPY;
 
                 simulationResults.push({
                     year,
                     btcPrice: btcPriceJPY,
-                    withdrawalRate: effectiveWithdrawalRate,
-                    withdrawalAmount: isBeforeStart ? '-' : withdrawalValue,
-                    withdrawalBTC: isBeforeStart ? '-' : withdrawalBTC,
-                    remainingBTC: yearEndBTC,
-                    totalValue: totalValue, // ★★★ エラー修正: totalValueプロパティを追加
-                    phase: isBeforeStart ? '-' : (inputs.showSecondPhase && year >= parseInt(inputs.secondPhaseYear)) ? '2段階目' : (inputs.showSecondPhase ? '1段階目' : '-'),
+                    withdrawalRate: year < startYearNum ? '-' : effectiveWithdrawalRate,
+                    withdrawalAmount: year < startYearNum ? '-' : withdrawalValue,
+                    withdrawalBTC: year < startYearNum ? '-' : withdrawalBTC,
+                    remainingBTC: currentBTC,
+                    totalValue: totalValueAfterWithdrawal,
+                    phase: year < startYearNum ? '積立' : '取崩',
                 });
-
-                currentBTC = yearEndBTC;
-                if (currentBTC < 0.00000001) currentBTC = 0; // 非常に小さい値を0にする
             }
 
             setResults(simulationResults);
@@ -208,7 +237,7 @@ export const useWithdrawalSimulation = () => {
         } catch (err: any) {
             setErrors({ simulation: 'シミュレーション中にエラーが発生しました: ' + err.message });
         }
-    };
+    }, []);
 
     return {
         results,

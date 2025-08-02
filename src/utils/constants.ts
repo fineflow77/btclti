@@ -1,4 +1,5 @@
 // src/utils/constants.ts
+
 /**
  * プロジェクト全体で使用される定数
  */
@@ -36,6 +37,18 @@ export enum PriceModel {
   STANDARD = 'standard',
   /** 保守的モデル（2050年に400万USD） */
   CONSERVATIVE = 'conservative',
+}
+
+/**
+ * 取り崩し戦略の種類
+ */
+export enum WithdrawalStrategy {
+  /** アクティブFIREプラン（逓減方式） */
+  ACTIVE_FIRE = 'active_fire',
+  /** 定率プラン */
+  PERCENTAGE = 'percentage',
+  /** 定額プラン */
+  FIXED = 'fixed',
 }
 
 /**

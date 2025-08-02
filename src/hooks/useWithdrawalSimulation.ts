@@ -176,18 +176,17 @@ export const useWithdrawalSimulation = () => {
                 let effectiveWithdrawalRate: number | string = '-';
 
                 if (year >= startYearNum) {
-                    const totalValue = currentBTC * btcPriceJPY;
+                    // === [修正] totalValueの定義をループの先頭に移動 ===
+                    const totalValueBeforeWithdrawal = currentBTC * btcPriceJPY;
 
                     switch (inputs.withdrawalType) {
                         case WithdrawalStrategy.ACTIVE_FIRE: {
                             const yearsSinceStart = year - startYearNum;
                             let currentRate = pStartRate;
-                            // 逓減期間中は線形補間で率を計算
-                            if (yearsSinceStart < pReductionYears) {
-                                // 逓減年数が1年の場合は即座に目標率になる
-                                const progress = pReductionYears > 1 ? yearsSinceStart / (pReductionYears - 1) : 1;
+                            if (pReductionYears > 1 && yearsSinceStart < pReductionYears) {
+                                const progress = yearsSinceStart / (pReductionYears - 1);
                                 currentRate = pStartRate - (pStartRate - pEndRate) * progress;
-                            } else {
+                            } else if (yearsSinceStart >= pReductionYears) {
                                 currentRate = pEndRate;
                             }
                             withdrawalBTC = currentBTC * currentRate;
@@ -201,8 +200,7 @@ export const useWithdrawalSimulation = () => {
                         case WithdrawalStrategy.FIXED: {
                             const monthlyWithdrawal = parseFloat(inputs.withdrawalAmount);
                             const desiredAnnualWithdrawalJPY = monthlyWithdrawal * 12 * Math.pow(1 + inflationRateNum, year - startYearNum);
-                            const totalWithdrawalAfterTax = desiredAnnualWithdrawalJPY;
-                            const totalWithdrawalBeforeTax = totalWithdrawalAfterTax / (1 - taxRateNum);
+                            const totalWithdrawalBeforeTax = desiredAnnualWithdrawalJPY / (1 - taxRateNum);
                             withdrawalBTC = totalWithdrawalBeforeTax / btcPriceJPY;
                             break;
                         }
@@ -214,7 +212,9 @@ export const useWithdrawalSimulation = () => {
 
                     const grossWithdrawalValue = withdrawalBTC * btcPriceJPY;
                     withdrawalValue = grossWithdrawalValue * (1 - taxRateNum);
-                    effectiveWithdrawalRate = (withdrawalBTC / currentBTC) * 100;
+                    if (currentBTC > 0) { // 0除算を避ける
+                        effectiveWithdrawalRate = (withdrawalBTC / currentBTC) * 100;
+                    }
                 }
 
                 currentBTC -= withdrawalBTC;
